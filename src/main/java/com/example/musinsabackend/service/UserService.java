@@ -1,8 +1,8 @@
 package com.example.musinsabackend.service;
 
-import com.example.musinsabackend.dto.UserDto;
-import com.example.musinsabackend.repository.UserRepository;
 import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.repository.UserRepository;
+import com.example.musinsabackend.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,4 +22,16 @@ public class UserService {
         user.setGender(userDto.getGender());
         userRepository.save(user);
     }
+
+    public boolean validateUser(UserDto userDto) {
+        User user = userRepository.findById(userDto.getUsername()).orElse(null);
+
+        // Check if user exists and password matches
+        return user != null && user.getPassword().equals(userDto.getPassword());
+    }
+
+    public User findUserByUsername(String username) {
+        return userRepository.findById(username).orElse(null);
+    }
+
 }
