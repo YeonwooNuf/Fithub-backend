@@ -2,6 +2,8 @@ package com.example.musinsabackend.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 public class User {
 
@@ -12,6 +14,68 @@ public class User {
     private String birthdate;
     private String phone;
     private String gender;
+
+    private String profileImageUrl; // 프로필 사진 URL
+    private int points; // 적립금
+    private int coupons; // 쿠폰 개수
+
+    // 관계 설정 (주문 내역, 리뷰, 1:1 문의 등 추가 가능)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Order> orders;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Review> reviews;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Asking> inquiries;
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    public int getCoupons() {
+        return coupons;
+    }
+
+    public void setCoupons(int coupons) {
+        this.coupons = coupons;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public List<Asking> getInquiries() {
+        return inquiries;
+    }
+
+    public void setInquiries(List<Asking> inquiries) {
+        this.inquiries = inquiries;
+    }
 
     public String getUsername() {
         return username;

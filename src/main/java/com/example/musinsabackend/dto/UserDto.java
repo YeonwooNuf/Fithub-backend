@@ -8,6 +8,34 @@ public class UserDto {
     private String phone;
     private String gender;
 
+    private String profileImageUrl; // 프로필 사진 URL
+    private int points; // 적립금
+    private int coupons; // 쿠폰 개수
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    public int getCoupons() {
+        return coupons;
+    }
+
+    public void setCoupons(int coupons) {
+        this.coupons = coupons;
+    }
+
     public String getUsername() {
         return username;
     }
