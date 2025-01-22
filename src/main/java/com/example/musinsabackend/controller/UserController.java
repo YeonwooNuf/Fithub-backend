@@ -18,9 +18,19 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody UserDto userDto) {
-        userService.registerUser(userDto);
-        return "User registered successfully!";
+    public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
+        try {
+            userService.registerUser(userDto);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "회원가입이 성공적으로 완료되었습니다."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false,
+                    "message", "회원가입에 실패하였습니다."
+            ));
+        }
     }
 
     @PostMapping("/login")
@@ -30,13 +40,13 @@ public class UserController {
         if (user != null && user.getPassword().equals(userDto.getPassword())) {
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "Login successful!",
+                    "message", "성공적으로 로그인 되었습니다.",
                     "nickname", user.getNickname() // 닉네임 반환
             ));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
-                    "message", "Invalid username or password!"
+                    "message", "아이디 및 비밀번호가 일치하지 않습니다."
             ));
         }
     }
