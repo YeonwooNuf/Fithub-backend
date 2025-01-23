@@ -9,8 +9,8 @@ public class UserDto {
     private String gender;
 
     private String profileImageUrl; // 프로필 사진 URL
-    private int points; // 적립금
-    private int coupons; // 쿠폰 개수
+    private Integer points; // 적립금
+    private Integer coupons; // 쿠폰 개수
 
     public String getProfileImageUrl() {
         return profileImageUrl;
@@ -20,19 +20,19 @@ public class UserDto {
         this.profileImageUrl = profileImageUrl;
     }
 
-    public int getPoints() {
+    public Integer getPoints() {
         return points;
     }
 
-    public void setPoints(int points) {
+    public void setPoints(Integer points) {
         this.points = points;
     }
 
-    public int getCoupons() {
+    public Integer getCoupons() {
         return coupons;
     }
 
-    public void setCoupons(int coupons) {
+    public void setCoupons(Integer coupons) {
         this.coupons = coupons;
     }
 
