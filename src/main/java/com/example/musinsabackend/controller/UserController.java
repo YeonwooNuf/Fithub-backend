@@ -13,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:3000")
 @Slf4j
 public class UserController {
 
@@ -23,17 +24,20 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
         try {
+            log.info("회원가입 요청: {}", userDto);
             userService.registerUser(userDto);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "회원가입이 성공적으로 완료되었습니다."
             ));
         } catch (IllegalArgumentException e) {
+            log.error("회원가입 실패 - 잘못된 요청: ", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "success", false,
                     "message", e.getMessage()
             ));
         } catch (Exception e) {
+            log.error("회원가입 중 서버 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "회원가입 중 문제가 발생하였습니다."
@@ -78,6 +82,7 @@ public class UserController {
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
+                    "username", user.getUsername() != null ? user.getUsername() : "",
                     "nickname", user.getNickname() != null ? user.getNickname() : "",
                     "profileImageUrl", user.getProfileImageUrl() != null ? user.getProfileImageUrl() : "",
                     "points", user.getPoints() != null ? user.getPoints() : 0,
@@ -114,6 +119,7 @@ public class UserController {
             User user = userService.findUserByUsername(username);
             return ResponseEntity.ok(Map.of(
                     "success", true,
+                    "username", user.getUsername(),
                     "nickname", user.getNickname(),
                     "profileImageUrl", user.getProfileImageUrl(),
                     "points", user.getPoints(),

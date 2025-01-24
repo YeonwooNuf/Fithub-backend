@@ -16,8 +16,12 @@ public class User {
     private String gender;
 
     private String profileImageUrl; // 프로필 사진 URL
-    private Integer points; // 적립금
-    private Integer coupons; // 쿠폰 개수
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer points = 0; // 적립금
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer coupons = 0; // 쿠폰 개수
 
     // 관계 설정 (주문 내역, 리뷰, 1:1 문의 등 추가 가능)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -27,7 +31,7 @@ public class User {
     private List<Review> reviews;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Asking> inquiries;
+    private List<Asking> askings;
 
     public String getProfileImageUrl() {
         return profileImageUrl;
@@ -69,12 +73,12 @@ public class User {
         this.reviews = reviews;
     }
 
-    public List<Asking> getInquiries() {
-        return inquiries;
+    public List<Asking> getAskings() {
+        return askings;
     }
 
-    public void setInquiries(List<Asking> inquiries) {
-        this.inquiries = inquiries;
+    public void setAskings(List<Asking> askings) {
+        this.askings = askings;
     }
 
     public String getUsername() {

@@ -43,14 +43,25 @@ public class UserService {
             throw new IllegalArgumentException("이미 존재하는 사용자입니다.");
         }
 
-        User user = new User();
-        user.setUsername(userDto.getUsername());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 해싱
-        user.setNickname(userDto.getNickname());
-        user.setBirthdate(userDto.getBirthdate());
-        user.setPhone(userDto.getPhone());
-        user.setGender(userDto.getGender());
-        userRepository.save(user);
+        try {
+            User user = new User();
+            user.setUsername(userDto.getUsername());
+            user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 해싱
+            user.setNickname(userDto.getNickname());
+            user.setBirthdate(userDto.getBirthdate());
+            user.setPhone(userDto.getPhone());
+            user.setGender(userDto.getGender());
+
+            // 기본값 설정
+            user.setPoints(userDto.getPoints() != null ? userDto.getPoints() : 0);
+            user.setCoupons(userDto.getCoupons() != null ? userDto.getCoupons() : 0);
+
+            userRepository.save(user);
+            log.info("회원가입 성공: {}", userDto.getUsername());
+        } catch (Exception e) {
+            log.error("사용자 저장 중 오류 발생: ", e);
+            throw new RuntimeException("회원가입 처리 중 오류가 발생하였습니다.");
+        }
     }
 
     // 로그인 처리
@@ -93,19 +104,25 @@ public class UserService {
 
     // JWT 토큰 유효성 검증
     public boolean validateToken(String token, String username) {
+        // validateToken 호출 확인
+        System.out.println("DEBUG: validateToken called with token: " + token + ", username: " + username); // 강제 출력
+        log.info("Entered validateToken method with token: {}, username: {}", token, username); // 디버깅용 로그
         try {
             String extractedUsername = Jwts.parser()
                     .setSigningKey(SECRET_KEY.getBytes())
-                    .parseClaimsJws(token)
+                    .parseClaimsJws(token.replace("Bearer ", "")) // Bearer 제거
                     .getBody()
-                    .getSubject();
+                    .getSubject(); // username 추출
 
+            log.info("Extracted username: {}", extractedUsername);
+            log.info("Validation result: {}", extractedUsername.equals(username));
             return extractedUsername.equals(username);
         } catch (Exception e) {
-            log.error("JWT 토큰 검증 실패: ", e);
+            log.error("Token validation failed", e);
             return false;
         }
     }
+
 
     // token 으로 사용자 조회
     public String getUsernameFromToken(String token) {
@@ -119,6 +136,18 @@ public class UserService {
             log.error("토큰에서 사용자 이름 추출 실패: ", e);
             return null; // 실패 시 null 반환
         }
+    }
+
+    public Integer getUserPoints(String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
+        return user.getPoints() != null ? user.getPoints() : 0;
+    }
+
+    public Integer getUserCoupons(String username) {
+        User user = userRepository.findById(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
+        return user.getCoupons() != null ? user.getCoupons() : 0;
     }
 
 }

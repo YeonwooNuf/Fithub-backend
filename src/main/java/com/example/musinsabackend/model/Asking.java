@@ -16,7 +16,7 @@ public class Asking {
 
     private String title;
     private String content;
-    private LocalDateTime inquiryDate;
+    private LocalDateTime askingDate;
 
     private String response; // 관리자의 답변
 
@@ -52,12 +52,12 @@ public class Asking {
         this.content = content;
     }
 
-    public LocalDateTime getInquiryDate() {
-        return inquiryDate;
+    public LocalDateTime getAskingDate() {
+        return askingDate;
     }
 
-    public void setInquiryDate(LocalDateTime inquiryDate) {
-        this.inquiryDate = inquiryDate;
+    public void setAskingDate(LocalDateTime askingDate) {
+        this.askingDate = askingDate;
     }
 
     public String getResponse() {

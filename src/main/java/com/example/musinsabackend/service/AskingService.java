@@ -22,7 +22,7 @@ public class AskingService {
         asking.setUser(user); // 사용자 연결
         asking.setTitle(askingDto.getTitle());
         asking.setContent(askingDto.getContent());
-        asking.setInquiryDate(LocalDateTime.now());
+        asking.setAskingDate(LocalDateTime.now());
         askingRepository.save(asking);
     }
 
