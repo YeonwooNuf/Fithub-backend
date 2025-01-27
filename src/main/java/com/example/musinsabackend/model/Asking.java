@@ -1,25 +1,35 @@
 package com.example.musinsabackend.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 public class Asking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // 문의 ID
 
     @ManyToOne
-    @JoinColumn(name = "username", nullable = false)
-    private User user;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // 문의한 사용자
 
-    private String title;
-    private String content;
-    private LocalDateTime askingDate;
+    @Column(nullable = false)
+    private String title; // 문의 제목
 
-    private String response; // 관리자의 답변
+    @Column(nullable = false)
+    private String content; // 문의 내용
 
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt; // 문의 생성 날짜
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt; // 문의 업데이트 날짜
+
+    @Enumerated(EnumType.STRING)
+    private AskingStatus status; // 문의 상태 (PENDING, ANSWERED 등)
+
+    // Getter와 Setter
     public Long getId() {
         return id;
     }
@@ -52,19 +62,27 @@ public class Asking {
         this.content = content;
     }
 
-    public LocalDateTime getAskingDate() {
-        return askingDate;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setAskingDate(LocalDateTime askingDate) {
-        this.askingDate = askingDate;
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getResponse() {
-        return response;
+    public Date getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setResponse(String response) {
-        this.response = response;
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public AskingStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AskingStatus status) {
+        this.status = status;
     }
 }

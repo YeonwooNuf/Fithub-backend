@@ -4,21 +4,37 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders") // 테이블 이름을 "orders"로 변경
+@Table(name = "orders")
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String productName;
-    private int quantity;
-    private int totalPrice;
-    private LocalDateTime orderDate;
+    private Long id; // 주문 ID
 
     @ManyToOne
-    @JoinColumn(name = "username", nullable = false)
-    private User user;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // 주문한 사용자
 
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product; // 주문한 상품
+
+    @Column(nullable = false)
+    private Integer quantity; // 구매 수량
+
+    @Column(nullable = false)
+    private Double totalPrice; // 총 가격
+
+    @Column(nullable = false)
+    private LocalDateTime orderDate; // 주문 날짜
+
+    @Column(nullable = true)
+    private String paymentKey; // 결제 키값 (외부 결제 API 연동용)
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status; // 주문 상태 (PENDING, COMPLETED, CANCELLED 등)
+
+    // Getter와 Setter
     public Long getId() {
         return id;
     }
@@ -27,27 +43,35 @@ public class Order {
         this.id = id;
     }
 
-    public String getProductName() {
-        return productName;
+    public User getUser() {
+        return user;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public int getQuantity() {
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    public int getTotalPrice() {
+    public Double getTotalPrice() {
         return totalPrice;
     }
 
-    public void setTotalPrice(int totalPrice) {
+    public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
     }
 
@@ -59,11 +83,19 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public User getUser() {
-        return user;
+    public String getPaymentKey() {
+        return paymentKey;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setPaymentKey(String paymentKey) {
+        this.paymentKey = paymentKey;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 }

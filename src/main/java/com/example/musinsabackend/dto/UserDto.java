@@ -1,47 +1,27 @@
 package com.example.musinsabackend.dto;
 
+import java.util.List;
+
 public class UserDto {
     private String username;
     private String password;
+
     private String nickname;
     private String birthdate;
     private String phone;
     private String gender;
-
     private String profileImageUrl; // 프로필 사진 URL
-    private Integer points; // 적립금
-    private Integer coupons; // 쿠폰 개수
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
-    }
-
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    public Integer getPoints() {
-        return points;
-    }
-
-    public void setPoints(Integer points) {
-        this.points = points;
-    }
-
-    public Integer getCoupons() {
-        return coupons;
-    }
-
-    public void setCoupons(Integer coupons) {
-        this.coupons = coupons;
-    }
+    // 참조 관계를 위한 필드
+    private List<OrderDto> orders; // 주문 내역
+    private List<ReviewDto> reviews; // 리뷰
+    private List<AskingDto> askings; // 1:1 문의 내역
+    private List<CommunityPostDto> communityPosts; // 커뮤니티 게시글
+    private List<CouponDto> coupons; // 쿠폰 내역
+    private List<PointDto> points; // 포인트 내역
 
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
@@ -50,6 +30,10 @@ public class UserDto {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getNickname() {
@@ -82,5 +66,61 @@ public class UserDto {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public List<OrderDto> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<OrderDto> orders) {
+        this.orders = orders;
+    }
+
+    public List<ReviewDto> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<ReviewDto> reviews) {
+        this.reviews = reviews;
+    }
+
+    public List<AskingDto> getAskings() {
+        return askings;
+    }
+
+    public void setAskings(List<AskingDto> askings) {
+        this.askings = askings;
+    }
+
+    public List<CommunityPostDto> getCommunityPosts() {
+        return communityPosts;
+    }
+
+    public void setCommunityPosts(List<CommunityPostDto> communityPosts) {
+        this.communityPosts = communityPosts;
+    }
+
+    public List<CouponDto> getCoupons() {
+        return coupons;
+    }
+
+    public void setCoupons(List<CouponDto> coupons) {
+        this.coupons = coupons;
+    }
+
+    public List<PointDto> getPoints() {
+        return points;
+    }
+
+    public void setPoints(List<PointDto> points) {
+        this.points = points;
     }
 }

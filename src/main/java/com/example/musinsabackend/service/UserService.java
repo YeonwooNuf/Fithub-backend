@@ -1,154 +1,65 @@
 package com.example.musinsabackend.service;
 
 import com.example.musinsabackend.dto.UserDto;
+import com.example.musinsabackend.jwt.JwtTokenProvider;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Service
-@Slf4j
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Value("${SECRET_KEY:default-secret-key}") // 환경 변수에서 키 값 가져옴
-    private String SECRET_KEY;
-
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    @PostConstruct // 애플리케이션 시작 시 SECRET_KEY 확인
-    public void logSecretKey() {
-        log.info("Loaded SECRET_KEY: {}", SECRET_KEY);
-        if (SECRET_KEY.equals("default-secret-key")) {      // SECRET_KEY 없으면 디폴트 값 지정
-            log.warn("deafult 키 값을 사용중입니다. 개인 키로 변경해주세요.");
-        }
+    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // 회원가입
     public void registerUser(UserDto userDto) {
-        // 사용자 중복 확인
-        Optional<User> existingUser = userRepository.findById(userDto.getUsername());
+        Optional<User> existingUser = userRepository.findByUsername(userDto.getUsername());
         if (existingUser.isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 사용자입니다.");
         }
 
-        try {
-            User user = new User();
-            user.setUsername(userDto.getUsername());
-            user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 해싱
-            user.setNickname(userDto.getNickname());
-            user.setBirthdate(userDto.getBirthdate());
-            user.setPhone(userDto.getPhone());
-            user.setGender(userDto.getGender());
+        User user = new User();
+        user.setUsername(userDto.getUsername());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 해싱
+        user.setNickname(userDto.getNickname());
+        user.setProfileImageUrl(
+                userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile-image-url"
+        );
 
-            // 기본값 설정
-            user.setPoints(userDto.getPoints() != null ? userDto.getPoints() : 0);
-            user.setCoupons(userDto.getCoupons() != null ? userDto.getCoupons() : 0);
-
-            userRepository.save(user);
-            log.info("회원가입 성공: {}", userDto.getUsername());
-        } catch (Exception e) {
-            log.error("사용자 저장 중 오류 발생: ", e);
-            throw new RuntimeException("회원가입 처리 중 오류가 발생하였습니다.");
-        }
+        userRepository.save(user);
     }
 
-    // 로그인 처리
+    // 로그인
     public String loginUser(String username, String plainPassword) {
-        try {
-            User user = userRepository.findById(username).orElseThrow(() ->
-                    new IllegalArgumentException("존재하지 않는 사용자입니다.")
-            );
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-            if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
-                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-            }
-
-            return generateToken(user);
-        } catch (IllegalArgumentException e) {
-            log.error("로그인 요청 실패: ", e); // 예외 로그 기록
-            throw e; // 예외 다시 던짐
-        } catch (Exception e) {
-            log.error("예상치 못한 오류 발생: ", e); // 모든 예외 로그 기록
-            throw new RuntimeException("로그인 처리 중 오류 발생"); // 명시적인 예외 반환
+        if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-    }
 
-    // JWT 토큰 생성
-    private String generateToken(User user) {
-        return Jwts.builder()
-                .setSubject(user.getUsername())
-                .claim("nickname", user.getNickname())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1일
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY.getBytes())
-                .compact();
+        return jwtTokenProvider.generateToken(user.getUsername());
     }
 
     // 사용자 정보 조회
-    public User findUserByUsername(String username) {
-        return userRepository.findById(username).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    public UserDto findUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        UserDto userDto = new UserDto();
+        userDto.setUsername(user.getUsername());
+        userDto.setNickname(user.getNickname());
+        userDto.setProfileImageUrl(user.getProfileImageUrl());
+        return userDto;
     }
-
-    // JWT 토큰 유효성 검증
-    public boolean validateToken(String token, String username) {
-        // validateToken 호출 확인
-        System.out.println("DEBUG: validateToken called with token: " + token + ", username: " + username); // 강제 출력
-        log.info("Entered validateToken method with token: {}, username: {}", token, username); // 디버깅용 로그
-        try {
-            String extractedUsername = Jwts.parser()
-                    .setSigningKey(SECRET_KEY.getBytes())
-                    .parseClaimsJws(token.replace("Bearer ", "")) // Bearer 제거
-                    .getBody()
-                    .getSubject(); // username 추출
-
-            log.info("Extracted username: {}", extractedUsername);
-            log.info("Validation result: {}", extractedUsername.equals(username));
-            return extractedUsername.equals(username);
-        } catch (Exception e) {
-            log.error("Token validation failed", e);
-            return false;
-        }
-    }
-
-
-    // token 으로 사용자 조회
-    public String getUsernameFromToken(String token) {
-        try {
-            return Jwts.parser()
-                    .setSigningKey(SECRET_KEY.getBytes())
-                    .parseClaimsJws(token.replace("Bearer ", ""))
-                    .getBody()
-                    .getSubject(); // username 추출
-        } catch (Exception e) {
-            log.error("토큰에서 사용자 이름 추출 실패: ", e);
-            return null; // 실패 시 null 반환
-        }
-    }
-
-    public Integer getUserPoints(String username) {
-        User user = userRepository.findById(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
-        return user.getPoints() != null ? user.getPoints() : 0;
-    }
-
-    public Integer getUserCoupons(String username) {
-        User user = userRepository.findById(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
-        return user.getCoupons() != null ? user.getCoupons() : 0;
-    }
-
 }
-
