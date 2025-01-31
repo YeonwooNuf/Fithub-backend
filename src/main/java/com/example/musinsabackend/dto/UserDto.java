@@ -3,6 +3,7 @@ package com.example.musinsabackend.dto;
 import java.util.List;
 
 public class UserDto {
+    private Long userId;
     private String username;
     private String password;
 
@@ -19,6 +20,9 @@ public class UserDto {
     private List<CommunityPostDto> communityPosts; // 커뮤니티 게시글
     private List<CouponDto> coupons; // 쿠폰 내역
     private List<PointDto> points; // 포인트 내역
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getUsername() {
         return username;

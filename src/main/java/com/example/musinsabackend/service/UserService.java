@@ -1,5 +1,7 @@
 package com.example.musinsabackend.service;
 
+import com.example.musinsabackend.dto.CouponDto;
+import com.example.musinsabackend.dto.PointDto;
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
 import com.example.musinsabackend.model.User;
@@ -33,6 +35,9 @@ public class UserService {
         user.setUsername(userDto.getUsername());
         user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 해싱
         user.setNickname(userDto.getNickname());
+        user.setGender(userDto.getGender());
+        user.setBirthdate(userDto.getBirthdate());
+        user.setPhone(userDto.getPhone());
         user.setProfileImageUrl(
                 userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile-image-url"
         );
@@ -56,10 +61,27 @@ public class UserService {
     public UserDto findUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
         UserDto userDto = new UserDto();
+        userDto.setUserId(user.getUserId()); // ✅ 추가
         userDto.setUsername(user.getUsername());
         userDto.setNickname(user.getNickname());
         userDto.setProfileImageUrl(user.getProfileImageUrl());
+        userDto.setGender(user.getGender());
+        userDto.setBirthdate(user.getBirthdate());
+        userDto.setPhone(user.getPhone());
+
+        userDto.setCoupons(user.getCoupons().stream()
+                .map(coupon -> new CouponDto(coupon.getId(), coupon.getName(), coupon.getDiscount(), coupon.getExpiryDate(), coupon.isUsed()))
+                .toList());
+
+        userDto.setPoints(user.getPoints().stream()
+                .map(point -> new PointDto(point.getId(), point.getDescription(), point.getAmount(), point.getDate()))
+                .toList());
+
+
+
         return userDto;
     }
+
 }

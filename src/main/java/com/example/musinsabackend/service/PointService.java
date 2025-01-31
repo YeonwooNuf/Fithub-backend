@@ -36,7 +36,7 @@ public class PointService {
             dto.setId(point.getId());
             dto.setDescription(point.getDescription());
             dto.setAmount(point.getAmount());
-            dto.setDate(point.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            dto.setDate(LocalDateTime.parse(point.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
             return dto;
         }).collect(Collectors.toList());
     }

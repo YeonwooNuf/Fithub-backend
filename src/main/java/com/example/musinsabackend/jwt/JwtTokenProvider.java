@@ -24,6 +24,11 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromToken(String token) {
+        // ✅ "Bearer " 접두어가 포함되어 있다면 제거
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY.getBytes())
                 .parseClaimsJws(token)
@@ -31,11 +36,14 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    // JWT 유효성 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(SECRET_KEY.getBytes()).parseClaimsJws(token);
+            System.out.println("🟡 [JwtTokenProvider] 토큰 검증 성공: " + token);
             return true;
         } catch (Exception e) {
+            System.out.println("❌ [JwtTokenProvider] 토큰 검증 실패: " + e.getMessage());
             return false;
         }
     }

@@ -48,6 +48,7 @@ public class UserController {
             String password = requestBody.get("password");
 
             String token = userService.loginUser(username, password);
+            System.out.println("로그인 응답 - 발급된 토큰: " + token);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -64,31 +65,36 @@ public class UserController {
 
     // 마이페이지 데이터 조회
     @GetMapping("/mypage")
-    public ResponseEntity<?> getMyPage(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getMyPage(@RequestHeader(value = "Authorization", required = false) String token) {
+        System.out.println("🟡 [UserController] /mypage 요청 받음 - Authorization 헤더: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            System.out.println("❌ [UserController] 토큰이 없거나 잘못된 형식 - 로그아웃 처리");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 요청입니다."
+            ));
+        }
+
         try {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
+            String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
+            System.out.println("🟡 [UserController] 추출된 사용자 이름: " + username);
 
             UserDto user = userService.findUserByUsername(username);
 
-            // 적립금 합산
-            int totalPoints = user.getPoints().stream()
-                    .mapToInt(point -> point.getAmount())
-                    .sum();
-
-            // 사용되지 않은 쿠폰 개수 계산
-            long unusedCoupons = user.getCoupons().stream()
-                    .filter(coupon -> !coupon.isUsed())
-                    .count();
+            System.out.println("🟢 [UserController] DB에서 가져온 유저 정보: 닉네임=" + user.getNickname() + ", 프로필=" + user.getProfileImageUrl());
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
+                    "userId", user.getUserId(),
                     "username", user.getUsername(),
                     "nickname", user.getNickname(),
                     "profileImageUrl", user.getProfileImageUrl(),
-                    "totalPoints", totalPoints,
-                    "unusedCoupons", unusedCoupons
+                    "totalPoints", user.getPoints(), // 적립금
+                    "unusedCoupons", user.getCoupons() // 사용하지 않은 쿠폰 개수
             ));
         } catch (Exception e) {
+            System.out.println("❌ [UserController] /mypage 요청 실패 - 오류: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
                     "message", "유효하지 않은 요청입니다."

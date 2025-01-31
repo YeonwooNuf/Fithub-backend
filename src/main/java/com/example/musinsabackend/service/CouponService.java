@@ -37,7 +37,7 @@ public class CouponService {
 
             // LocalDate -> String 변환
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            dto.setExpiryDate(coupon.getExpiryDate().format(formatter));
+            dto.setExpiryDate(LocalDate.parse(coupon.getExpiryDate().format(formatter)));
 
             dto.setUsed(coupon.isUsed());
             return dto;
