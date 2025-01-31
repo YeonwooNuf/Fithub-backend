@@ -30,7 +30,8 @@ public class UserController {
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "회원가입이 완료되었습니다."
+                    "message", "회원가입이 완료되었습니다.",
+                    "role", userDto.getRole()
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -47,13 +48,16 @@ public class UserController {
             String username = requestBody.get("username");
             String password = requestBody.get("password");
 
+            User user = userService.findUserByUsername(username);
+
             String token = userService.loginUser(username, password);
             System.out.println("로그인 응답 - 발급된 토큰: " + token);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "로그인 성공",
-                    "token", token
+                    "token", token,
+                    "role", user.getRole()
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -66,23 +70,16 @@ public class UserController {
     // 마이페이지 데이터 조회
     @GetMapping("/mypage")
     public ResponseEntity<?> getMyPage(@RequestHeader(value = "Authorization", required = false) String token) {
-        System.out.println("🟡 [UserController] /mypage 요청 받음 - Authorization 헤더: " + token);
 
         if (token == null || !token.startsWith("Bearer ")) {
-            System.out.println("❌ [UserController] 토큰이 없거나 잘못된 형식 - 로그아웃 처리");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
                     "message", "유효하지 않은 요청입니다."
             ));
         }
-
         try {
             String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
-            System.out.println("🟡 [UserController] 추출된 사용자 이름: " + username);
-
-            UserDto user = userService.findUserByUsername(username);
-
-            System.out.println("🟢 [UserController] DB에서 가져온 유저 정보: 닉네임=" + user.getNickname() + ", 프로필=" + user.getProfileImageUrl());
+            User user = userService.findUserByUsername(username);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -94,12 +91,10 @@ public class UserController {
                     "unusedCoupons", user.getCoupons() // 사용하지 않은 쿠폰 개수
             ));
         } catch (Exception e) {
-            System.out.println("❌ [UserController] /mypage 요청 실패 - 오류: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
                     "message", "유효하지 않은 요청입니다."
             ));
         }
     }
-
 }

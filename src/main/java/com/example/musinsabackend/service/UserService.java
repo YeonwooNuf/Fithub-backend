@@ -4,6 +4,7 @@ import com.example.musinsabackend.dto.CouponDto;
 import com.example.musinsabackend.dto.PointDto;
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
+import com.example.musinsabackend.model.Role;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,6 +43,8 @@ public class UserService {
                 userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile-image-url"
         );
 
+        user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.USER);
+
         userRepository.save(user);
     }
 
@@ -58,7 +61,7 @@ public class UserService {
     }
 
     // 사용자 정보 조회
-    public UserDto findUserByUsername(String username) {
+    public User findUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -81,7 +84,7 @@ public class UserService {
 
 
 
-        return userDto;
+        return user;
     }
 
 }

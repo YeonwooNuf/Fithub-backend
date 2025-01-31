@@ -1,5 +1,7 @@
 package com.example.musinsabackend.dto;
 
+import com.example.musinsabackend.model.Role;
+
 import java.util.List;
 
 public class UserDto {
@@ -13,19 +15,31 @@ public class UserDto {
     private String gender;
     private String profileImageUrl; // 프로필 사진 URL
 
-    // 참조 관계를 위한 필드
+    private Role role; // 사용자 역할 지정
+
+// 참조 관계를 위한 필드
     private List<OrderDto> orders; // 주문 내역
+
     private List<ReviewDto> reviews; // 리뷰
     private List<AskingDto> askings; // 1:1 문의 내역
     private List<CommunityPostDto> communityPosts; // 커뮤니티 게시글
     private List<CouponDto> coupons; // 쿠폰 내역
     private List<PointDto> points; // 포인트 내역
-
     public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
     public String getUsername() {
         return username;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getPassword() {

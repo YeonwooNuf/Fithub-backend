@@ -23,6 +23,10 @@ public class User {
 
     private String profileImageUrl; // 프로필 사진 URL
 
+    @Enumerated(EnumType.STRING) // ✅ Enum 타입으로 저장
+    @Column(nullable = false)
+    private Role role = Role.USER; // ✅ 기본값을 USER로 설정
+
     // 관계 설정
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Coupon> coupons; // 쿠폰 관계
@@ -46,6 +50,14 @@ public class User {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getUsername() {
