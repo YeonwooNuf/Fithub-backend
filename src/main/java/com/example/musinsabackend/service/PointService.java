@@ -5,7 +5,6 @@ import com.example.musinsabackend.model.Point;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.PointRepository;
 import com.example.musinsabackend.repository.UserRepository;
-import com.example.musinsabackend.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,13 +22,12 @@ public class PointService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    // ✅ 사용자 포인트 내역 조회 (userId 기반)
+    public List<PointDto> getUserPointHistory(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-    // 사용자 포인트 내역 조회
-    public List<PointDto> getUserPointHistory(String token) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        List<Point> points = pointRepository.findByUser_Username(username);
+        List<Point> points = pointRepository.findByUser(user);
 
         return points.stream().map(point -> {
             PointDto dto = new PointDto();
@@ -41,10 +39,9 @@ public class PointService {
         }).collect(Collectors.toList());
     }
 
-    // 포인트 적립
-    public void addPoints(String token, int amount, String description) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        User user = userRepository.findByUsername(username)
+    // ✅ 포인트 적립 (userId 기반)
+    public void addPoints(Long userId, int amount, String description) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Point point = new Point();
@@ -56,13 +53,12 @@ public class PointService {
         pointRepository.save(point);
     }
 
-    // 포인트 사용
-    public void usePoints(String token, int amount) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        User user = userRepository.findByUsername(username)
+    // ✅ 포인트 사용 (userId 기반)
+    public void usePoints(Long userId, int amount) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        int totalPoints = pointRepository.findByUser_Username(username)
+        int totalPoints = pointRepository.findByUser(user)
                 .stream()
                 .mapToInt(Point::getAmount)
                 .sum();
@@ -80,16 +76,24 @@ public class PointService {
         pointRepository.save(point);
     }
 
-    public void deductPoints(String username, int pointUsage) {
-        // 사용자 포인트 기록 조회
-        List<Point> points = pointRepository.findByUser_Username(username);
+    // ✅ 포인트 차감 메소드 추가(환불, 취소 시)
+    public void deductPoints(Long userId, int pointUsage) {
+        // 사용자 정보 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        if (points.isEmpty()) {
-            throw new IllegalArgumentException("사용자의 포인트 기록이 존재하지 않습니다.");
+        // 현재 보유 포인트 합산
+        int totalPoints = pointRepository.findByUser(user)
+                .stream()
+                .mapToInt(Point::getAmount)
+                .sum();
+
+        if (totalPoints < pointUsage) {
+            throw new IllegalArgumentException("사용 가능한 포인트가 부족합니다.");
         }
 
         // 포인트 차감 로직
-        for (Point point : points) {
+        for (Point point : pointRepository.findByUser(user)) {
             if (point.getAmount() >= pointUsage) {
                 point.setAmount(point.getAmount() - pointUsage);
                 pointRepository.save(point);
@@ -100,10 +104,5 @@ public class PointService {
                 pointRepository.save(point);
             }
         }
-
-        if (pointUsage > 0) {
-            throw new IllegalArgumentException("사용 가능한 포인트가 부족합니다.");
-        }
     }
-
 }

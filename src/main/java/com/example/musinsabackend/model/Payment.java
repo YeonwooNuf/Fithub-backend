@@ -11,7 +11,9 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username; // 결제 사용자
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false) // ✅ userId 외래키 추가
+    private User user; // 결제 사용자
 
     private int totalAmount; // 총 결제 금액
     private int pointUsed; // 사용한 포인트 금액

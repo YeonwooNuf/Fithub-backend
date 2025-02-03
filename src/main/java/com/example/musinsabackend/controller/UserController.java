@@ -30,8 +30,7 @@ public class UserController {
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "회원가입이 완료되었습니다.",
-                    "role", userDto.getRole()
+                    "message", "회원가입이 완료되었습니다."
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -81,6 +80,8 @@ public class UserController {
             String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
             User user = userService.findUserByUsername(username);
 
+            int couponCount = userService.getUserCouponCount(user.getUserId());
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "userId", user.getUserId(),
@@ -88,8 +89,10 @@ public class UserController {
                     "nickname", user.getNickname(),
                     "profileImageUrl", user.getProfileImageUrl(),
                     "totalPoints", user.getPoints(), // 적립금
-                    "unusedCoupons", user.getCoupons() // 사용하지 않은 쿠폰 개수
-            ));
+                    "role", user.getRole(),
+                    "unusedCoupons", couponCount // 사용하지 않은 쿠폰 개수
+                    ));
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,

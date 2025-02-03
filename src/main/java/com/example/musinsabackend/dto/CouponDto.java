@@ -6,7 +6,7 @@ public class CouponDto {
     private Long id;
     private String name;
     private int discount;
-    private LocalDate expiryDate; // ✅ 변경: String → LocalDateTime
+    private LocalDate expiryDate; // String → LocalDateTime
     private boolean isUsed;
 
     public CouponDto() {}

@@ -1,5 +1,6 @@
 package com.example.musinsabackend.controller;
 
+import com.example.musinsabackend.jwt.JwtTokenProvider;
 import com.example.musinsabackend.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,9 @@ public class PaymentController {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider; // ✅ JWT 파싱을 위한 TokenProvider 추가
 
     /**
      * 결제 처리
@@ -34,8 +38,12 @@ public class PaymentController {
         try {
             log.info("결제 요청: 총 금액={}, 사용 포인트={}, 쿠폰 ID={}", totalAmount, pointUsage, couponId);
 
-            // 결제 처리
-            int finalAmount = paymentService.processPayment(token, totalAmount, pointUsage, couponId);
+            // ✅ JWT에서 userId 가져오기
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+            log.info("결제 요청 - 사용자 ID: {}", userId);
+
+            // ✅ 결제 처리
+            int finalAmount = paymentService.processPayment(userId, totalAmount, pointUsage, couponId);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
