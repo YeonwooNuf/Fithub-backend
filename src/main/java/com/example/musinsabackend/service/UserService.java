@@ -88,6 +88,12 @@ public class UserService {
         return user;
     }
 
+    // ✅ 사용자 ID로 사용자 정보 조회
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    }
+
     public int getUserCouponCount(Long userId) {
         return couponRepository.countCouponsByUserId(userId); // ✅ 쿠폰 개수 직접 가져오기
     }

@@ -21,16 +21,25 @@ public class PointController {
     private JwtTokenProvider jwtTokenProvider;
 
     // ✅ 포인트 내역 조회
-    @GetMapping
+    @GetMapping("/history")
     public ResponseEntity<?> getUserPointHistory(@RequestHeader("Authorization") String token) {
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        String userIdStr = String.valueOf(userId);
+        List<PointDto> pointHistory = pointService.getUserPointHistory(token);
 
-        List<PointDto> pointHistory = pointService.getUserPointHistory(userId);
+        // 🔥 올바른 JSON 형태로 변환해서 반환
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "points", pointHistory  // ✅ List<PointDto>를 직접 반환해야 함
+        ));
+    }
+
+    @GetMapping("/balance")
+    public ResponseEntity<?> getUserPointBalance(@RequestHeader("Authorization") String token) {
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        int totalPoints = pointService.getUserTotalPoints(userId); // ✅ 총 적립금 계산
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "points", pointHistory
+                "points", totalPoints // ✅ 전체 적립금 잔액 반환
         ));
     }
 

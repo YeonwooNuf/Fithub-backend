@@ -22,7 +22,7 @@ public class UserController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    // 회원가입
+    // ✅ 회원가입
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
         try {
@@ -40,7 +40,7 @@ public class UserController {
         }
     }
 
-    // 로그인
+    // ✅ 로그인
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> requestBody) {
         try {
@@ -48,7 +48,6 @@ public class UserController {
             String password = requestBody.get("password");
 
             User user = userService.findUserByUsername(username);
-
             String token = userService.loginUser(username, password);
             System.out.println("로그인 응답 - 발급된 토큰: " + token);
 
@@ -66,7 +65,7 @@ public class UserController {
         }
     }
 
-    // 마이페이지 데이터 조회
+    // ✅ 마이페이지 데이터 조회
     @GetMapping("/mypage")
     public ResponseEntity<?> getMyPage(@RequestHeader(value = "Authorization", required = false) String token) {
 
@@ -79,7 +78,6 @@ public class UserController {
         try {
             String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
             User user = userService.findUserByUsername(username);
-
             int couponCount = userService.getUserCouponCount(user.getUserId());
 
             return ResponseEntity.ok(Map.of(
@@ -91,13 +89,25 @@ public class UserController {
                     "totalPoints", user.getPoints(), // 적립금
                     "role", user.getRole(),
                     "unusedCoupons", couponCount // 사용하지 않은 쿠폰 개수
-                    ));
-
+            ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
                     "message", "유효하지 않은 요청입니다."
             ));
+        }
+    }
+
+    // ✅ 사용자의 프로필 이미지 조회 (프론트에서 추가 요청 가능)
+    @GetMapping("/{userId}/profile-image")
+    public ResponseEntity<?> getUserProfileImage(@PathVariable Long userId) {
+        try {
+            User user = userService.findUserById(userId); // ✅ findUserById 사용
+            String profileImageUrl = user.getProfileImageUrl();
+
+            return ResponseEntity.ok(Map.of("profileImageUrl", profileImageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "사용자를 찾을 수 없습니다."));
         }
     }
 }
