@@ -77,7 +77,7 @@ public class BrandService {
                 Files.createDirectories(uploadPath);
             }
 
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            String fileName = file.getOriginalFilename();
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath);
 
