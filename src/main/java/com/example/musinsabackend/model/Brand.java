@@ -13,6 +13,9 @@ public class Brand {
     @Column(nullable = false, unique = true)
     private String name; // 브랜드명
 
+    @Column(nullable = true)
+    private String subName; // 서브 브랜드명 (영어 또는 추가 명칭)
+
     @Column(nullable = false)
     private String logoUrl; // 브랜드 로고 이미지 URL
 
@@ -20,11 +23,19 @@ public class Brand {
     private List<Product> products; // 해당 브랜드의 상품들
 
     // Getter & Setter
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public String getName() { return name; }
+
     public void setName(String name) { this.name = name; }
+    public String getSubName() {
+        return subName;
+    }
+
+    public void setSubName(String subName) {
+        this.subName = subName;
+    }
 
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
