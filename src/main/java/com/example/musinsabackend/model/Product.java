@@ -17,15 +17,26 @@ public class Product {
     private Double price; // 가격
 
     @Column(nullable = true)
-    private String size; // 사이즈
+    private String description; // 상품 설명
 
     @Column(nullable = true)
-    private String color; // 색상
+    private String imageUrl; // 상품 이미지 URL
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private List<Order> orders; // 해당 상품의 주문 내역
+    @ElementCollection
+    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "size")
+    private List<String> sizes; // 🔥 여러 개의 사이즈 저장
 
-    // Getter와 Setter
+    @ElementCollection
+    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "color")
+    private List<String> colors; // 🔥 여러 개의 색상 저장
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id", nullable = false)
+    private Brand brand; // 브랜드
+
+    // Getter & Setter
     public Long getId() {
         return id;
     }
@@ -50,27 +61,43 @@ public class Product {
         this.price = price;
     }
 
-    public String getSize() {
-        return size;
+    public String getDescription() {
+        return description;
     }
 
-    public void setSize(String size) {
-        this.size = size;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public String getColor() {
-        return color;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setColor(String color) {
-        this.color = color;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
-    public List<Order> getOrders() {
-        return orders;
+    public List<String> getSizes() {
+        return sizes;
     }
 
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
+    public void setSizes(List<String> sizes) {
+        this.sizes = sizes;
+    }
+
+    public List<String> getColors() {
+        return colors;
+    }
+
+    public void setColors(List<String> colors) {
+        this.colors = colors;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
     }
 }

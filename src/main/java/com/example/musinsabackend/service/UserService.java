@@ -8,6 +8,9 @@ import com.example.musinsabackend.model.Role;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.CouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -88,13 +91,54 @@ public class UserService {
         return user;
     }
 
-    // ✅ 사용자 ID로 사용자 정보 조회
+    // 사용자 ID로 사용자 정보 조회
     public User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 
+    // 쿠폰 개수 직접 가져오기
     public int getUserCouponCount(Long userId) {
-        return couponRepository.countCouponsByUserId(userId); // ✅ 쿠폰 개수 직접 가져오기
+        return couponRepository.countCouponsByUserId(userId);
+    }
+
+    // 전체 사용자 조회 (페이지네이션) - username, nickname, birthdate, phone, gender 포함
+    public Page<UserDto> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepository.findAll(pageable).map(user -> new UserDto(
+                user.getUserId(),
+                user.getUsername(),
+                user.getNickname(),
+                user.getBirthdate(),
+                user.getPhone(),
+                user.getGender(),
+                user.getRole()
+        ));
+    }
+
+    // ✅ 특정 사용자 검색 (닉네임 또는 이메일 기반)
+    public UserDto searchUser(String query) {
+        Optional<User> userOpt = userRepository.findByUsername(query);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByNickname(query);
+        }
+        User user = userOpt.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return new UserDto(
+                user.getUserId(),
+                user.getUsername(),
+                user.getNickname(),
+                user.getBirthdate(),
+                user.getPhone(),
+                user.getGender(),
+                user.getRole()
+        );
+    }
+
+    // ✅ 사용자 삭제 (Hard Delete)
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("사용자가 존재하지 않습니다.");
+        }
+        userRepository.deleteById(userId);
     }
 }

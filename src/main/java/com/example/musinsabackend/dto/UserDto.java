@@ -25,6 +25,21 @@ public class UserDto {
     private List<CommunityPostDto> communityPosts; // 커뮤니티 게시글
     private List<CouponDto> coupons; // 쿠폰 내역
     private List<PointDto> points; // 포인트 내역
+
+    public UserDto(Long userId, String username, String nickname, String birthdate, String phone, String gender, Role role) {
+        this.userId = userId;
+        this.username = username;
+        this.nickname = nickname;
+        this.birthdate = birthdate;
+        this.phone = phone;
+        this.gender = gender;
+        this.role = role;
+    }
+
+    // 기본 생성자
+    public UserDto() {
+    }
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) {
         this.userId = userId;
