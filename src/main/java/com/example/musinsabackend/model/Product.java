@@ -36,11 +36,15 @@ public class Product {
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand; // 브랜드
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductCategory category; // ✅ 상품 카테고리 추가
+
     // Getter & Setter
+
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -99,5 +103,13 @@ public class Product {
 
     public void setBrand(Brand brand) {
         this.brand = brand;
+    }
+
+    public ProductCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(ProductCategory category) {
+        this.category = category;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.musinsabackend.controller;
 
-import com.example.musinsabackend.model.Product;
+import com.example.musinsabackend.dto.ProductDto;
+import com.example.musinsabackend.model.ProductCategory;
 import com.example.musinsabackend.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,13 +22,13 @@ public class ProductController {
         this.productService = productService;
     }
 
-    // ✅ 1. 전체 상품 조회 (페이지네이션)
+    // ✅ 1. 전체 상품 조회 (페이지네이션 & DTO 적용)
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Product> productPage = productService.getAllProducts(PageRequest.of(page, size));
+        Page<ProductDto> productPage = productService.getAllProducts(PageRequest.of(page, size));
 
         return ResponseEntity.ok(Map.of(
                 "products", productPage.getContent(),
@@ -36,9 +37,9 @@ public class ProductController {
         ));
     }
 
-    // ✅ 2. 특정 상품 조회
+    // ✅ 2. 특정 상품 조회 (DTO 변환)
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
@@ -49,7 +50,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Product> productPage = productService.searchProducts(keyword, PageRequest.of(page, size));
+        Page<ProductDto> productPage = productService.searchProducts(keyword, PageRequest.of(page, size));
 
         return ResponseEntity.ok(Map.of(
                 "products", productPage.getContent(),
@@ -58,45 +59,49 @@ public class ProductController {
         ));
     }
 
-    // ✅ 4. 상품 추가 (사이즈, 색상 리스트 포함)
+    // ✅ 4. 상품 추가 (DTO 변환 & 카테고리 추가)
     @PostMapping
-    public ResponseEntity<Product> addProduct(@RequestBody Map<String, Object> requestData) {
+    public ResponseEntity<ProductDto> addProduct(@RequestBody Map<String, Object> requestData) {
         Long brandId = Long.parseLong(requestData.get("brandId").toString());
 
-        Product product = new Product();
-        product.setName((String) requestData.get("name"));
-        product.setPrice(Double.valueOf(requestData.get("price").toString()));
-        product.setDescription((String) requestData.get("description"));
-        product.setImageUrl((String) requestData.get("imageUrl"));
+        ProductDto productDto = new ProductDto(
+                null,
+                (String) requestData.get("name"),
+                Double.valueOf(requestData.get("price").toString()),
+                (String) requestData.get("description"),
+                (String) requestData.get("imageUrl"),
+                (List<String>) requestData.get("sizes"),
+                (List<String>) requestData.get("colors"),
+                (String) requestData.get("category"),
+                null,
+                null
+        );
 
-        // 🔥 JSON 리스트 변환 후 저장
-        product.setSizes((List<String>) requestData.get("sizes"));
-        product.setColors((List<String>) requestData.get("colors"));
-
-        Product createdProduct = productService.addProduct(product, brandId);
-        return ResponseEntity.ok(createdProduct);
+        return ResponseEntity.ok(productService.addProduct(productDto, brandId));
     }
 
-    // ✅ 5. 상품 수정
+    // ✅ 5. 상품 수정 (DTO 변환 & 카테고리 추가)
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<ProductDto> updateProduct(
             @PathVariable Long id,
             @RequestBody Map<String, Object> requestData
     ) {
         Long brandId = Long.parseLong(requestData.get("brandId").toString());
 
-        Product updatedProduct = new Product();
-        updatedProduct.setName((String) requestData.get("name"));
-        updatedProduct.setPrice(Double.valueOf(requestData.get("price").toString()));
-        updatedProduct.setDescription((String) requestData.get("description"));
-        updatedProduct.setImageUrl((String) requestData.get("imageUrl"));
+        ProductDto productDto = new ProductDto(
+                id,
+                (String) requestData.get("name"),
+                Double.valueOf(requestData.get("price").toString()),
+                (String) requestData.get("description"),
+                (String) requestData.get("imageUrl"),
+                (List<String>) requestData.get("sizes"),
+                (List<String>) requestData.get("colors"),
+                (String) requestData.get("category"), // ✅ 카테고리 추가
+                null,
+                null
+        );
 
-        // 🔥 JSON 리스트 변환 후 저장
-        updatedProduct.setSizes((List<String>) requestData.get("sizes"));
-        updatedProduct.setColors((List<String>) requestData.get("colors"));
-
-        Product savedProduct = productService.updateProduct(id, updatedProduct, brandId);
-        return ResponseEntity.ok(savedProduct);
+        return ResponseEntity.ok(productService.updateProduct(id, productDto, brandId));
     }
 
     // ✅ 6. 상품 삭제

@@ -1,6 +1,7 @@
 package com.example.musinsabackend.dto;
 
 import com.example.musinsabackend.model.Product;
+import com.example.musinsabackend.model.ProductCategory;
 
 import java.util.List;
 
@@ -14,11 +15,12 @@ public class ProductDto {
     private List<String> colors;
     private String brandName; // 브랜드명
     private String brandLogoUrl; // ✅ 브랜드 로고 추가
+    private ProductCategory category; // ✅ 상품 카테고리 추가
 
     // 생성자
     public ProductDto(Long id, String name, Double price, String description,
                       String imageUrl, List<String> sizes, List<String> colors,
-                      String brandName, String brandLogoUrl) {
+                      String brandName, String brandLogoUrl, ProductCategory category) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -28,6 +30,7 @@ public class ProductDto {
         this.colors = colors;
         this.brandName = brandName;
         this.brandLogoUrl = brandLogoUrl;
+        this.category = category;
     }
 
     // 엔티티 → DTO 변환 메서드
@@ -41,7 +44,8 @@ public class ProductDto {
                 product.getSizes(),
                 product.getColors(),
                 product.getBrand() != null ? product.getBrand().getName() : null,
-                product.getBrand() != null ? product.getBrand().getLogoUrl() : null // ✅ 브랜드 로고 URL 추가
+                product.getBrand() != null ? product.getBrand().getLogoUrl() : null, // ✅ 브랜드 로고 URL 추가
+                product.getCategory() // ✅ 상품 카테고리 추가
         );
     }
 
@@ -72,4 +76,7 @@ public class ProductDto {
 
     public String getBrandLogoUrl() { return brandLogoUrl; }
     public void setBrandLogoUrl(String brandLogoUrl) { this.brandLogoUrl = brandLogoUrl; }
+
+    public ProductCategory getCategory() { return category; }
+    public void setCategory(ProductCategory category) { this.category = category; }
 }
