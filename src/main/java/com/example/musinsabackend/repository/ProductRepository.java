@@ -14,7 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ✅ 상품 이름으로 검색 (대소문자 무시) + 페이지네이션 적용
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    // ✅ 특정 브랜드의 상품 검색 (Brand 엔티티를 직접 참조)
+    // ✅ 특정 브랜드의 상품 검색
     Page<Product> findByBrand(Brand brand, Pageable pageable);
 
     // ✅ 카테고리로 상품 검색

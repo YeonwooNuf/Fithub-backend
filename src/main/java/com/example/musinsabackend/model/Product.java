@@ -1,115 +1,121 @@
 package com.example.musinsabackend.model;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
 public class Product {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 상품 ID
+    private Long id;
 
     @Column(nullable = false)
-    private String name; // 상품명
+    private String name;
 
     @Column(nullable = false)
-    private Double price; // 가격
+    private Double price;
 
-    @Column(nullable = true)
-    private String description; // 상품 설명
+    @Column(nullable = false, length = 1000)
+    private String description;
 
-    @Column(nullable = true)
-    private String imageUrl; // 상품 이미지 URL
-
+    // ✅ 여러 장의 이미지 저장
     @ElementCollection
-    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "size")
-    private List<String> sizes; // 🔥 여러 개의 사이즈 저장
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url", nullable = false)
+    private List<String> images;
 
-    @ElementCollection
-    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "color")
-    private List<String> colors; // 🔥 여러 개의 색상 저장
+    // ✅ JSON 문자열로 저장 (사이즈 리스트)
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String sizes;
 
+    // ✅ JSON 문자열로 저장 (색상 리스트)
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String colors;
+
+    // ✅ 브랜드 연결
     @ManyToOne
     @JoinColumn(name = "brand_id", nullable = false)
-    private Brand brand; // 브랜드
+    private Brand brand;
 
+    // ✅ 상품 카테고리 추가 (ENUM)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProductCategory category; // ✅ 상품 카테고리 추가
+    private ProductCategory category;
 
-    // Getter & Setter
+    // ✅ 기본 생성자
+    public Product() {}
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    // ✅ 생성자
+    public Product(String name, Double price, String description, List<String> images,
+                   List<String> sizes, List<String> colors, Brand brand, ProductCategory category) {
         this.name = name;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
         this.price = price;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
+        this.images = images;
+        setSizes(sizes); // JSON 변환
+        setColors(colors); // JSON 변환
+        this.brand = brand;
+        this.category = category;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
+    // ✅ JSON 변환을 위한 Getter
     public List<String> getSizes() {
-        return sizes;
-    }
-
-    public void setSizes(List<String> sizes) {
-        this.sizes = sizes;
+        try {
+            return objectMapper.readValue(sizes, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return List.of(); // 변환 실패 시 빈 리스트 반환
+        }
     }
 
     public List<String> getColors() {
-        return colors;
+        try {
+            return objectMapper.readValue(colors, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    // ✅ JSON 변환을 위한 Setter
+    public void setSizes(List<String> sizes) {
+        try {
+            this.sizes = objectMapper.writeValueAsString(sizes);
+        } catch (Exception e) {
+            this.sizes = "[]"; // 변환 실패 시 빈 JSON 배열 저장
+        }
     }
 
     public void setColors(List<String> colors) {
-        this.colors = colors;
+        try {
+            this.colors = objectMapper.writeValueAsString(colors);
+        } catch (Exception e) {
+            this.colors = "[]";
+        }
     }
 
-    public Brand getBrand() {
-        return brand;
-    }
+    // ✅ Getter & Setter
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setBrand(Brand brand) {
-        this.brand = brand;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public ProductCategory getCategory() {
-        return category;
-    }
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
 
-    public void setCategory(ProductCategory category) {
-        this.category = category;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> images) { this.images = images; }
+
+    public Brand getBrand() { return brand; }
+    public void setBrand(Brand brand) { this.brand = brand; }
+
+    public ProductCategory getCategory() { return category; }
+    public void setCategory(ProductCategory category) { this.category = category; }
 }

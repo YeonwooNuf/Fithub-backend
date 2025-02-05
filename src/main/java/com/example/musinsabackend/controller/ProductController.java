@@ -5,8 +5,10 @@ import com.example.musinsabackend.model.ProductCategory;
 import com.example.musinsabackend.service.ProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,6 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<ProductDto> productPage = productService.getAllProducts(PageRequest.of(page, size));
-
         return ResponseEntity.ok(Map.of(
                 "products", productPage.getContent(),
                 "currentPage", productPage.getNumber(),
@@ -51,7 +52,6 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<ProductDto> productPage = productService.searchProducts(keyword, PageRequest.of(page, size));
-
         return ResponseEntity.ok(Map.of(
                 "products", productPage.getContent(),
                 "currentPage", productPage.getNumber(),
@@ -59,49 +59,57 @@ public class ProductController {
         ));
     }
 
-    // ✅ 4. 상품 추가 (DTO 변환 & 카테고리 추가)
-    @PostMapping
-    public ResponseEntity<ProductDto> addProduct(@RequestBody Map<String, Object> requestData) {
-        Long brandId = Long.parseLong(requestData.get("brandId").toString());
+    // ✅ 4. 상품 추가 (이미지 필수 입력)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductDto> addProduct(
+            @RequestParam("name") String name,
+            @RequestParam("price") Double price,
+            @RequestParam("description") String description,
+            @RequestParam("brandId") Long brandId,
+            @RequestParam("category") String categoryStr,
+            @RequestParam(value = "sizes", required = false) List<String> sizes,
+            @RequestParam(value = "colors", required = false) List<String> colors,
+            @RequestPart(value = "images", required = true) List<MultipartFile> images  // ✅ 이미지 필수
+    ) {
+        validateImages(images);
+
+        ProductCategory category = convertToCategory(categoryStr);
 
         ProductDto productDto = new ProductDto(
-                null,
-                (String) requestData.get("name"),
-                Double.valueOf(requestData.get("price").toString()),
-                (String) requestData.get("description"),
-                (String) requestData.get("imageUrl"),
-                (List<String>) requestData.get("sizes"),
-                (List<String>) requestData.get("colors"),
-                (String) requestData.get("category"),
-                null,
-                null
+                null, name, price, description, null,
+                sizes != null ? sizes : List.of(),   // ✅ NULL 방지
+                colors != null ? colors : List.of(), // ✅ NULL 방지
+                null, null, category
         );
 
-        return ResponseEntity.ok(productService.addProduct(productDto, brandId));
+        return ResponseEntity.ok(productService.addProduct(productDto, brandId, images));
     }
 
-    // ✅ 5. 상품 수정 (DTO 변환 & 카테고리 추가)
-    @PutMapping("/{id}")
+    // ✅ 5. 상품 수정 (이미지 필수 입력)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDto> updateProduct(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> requestData
+            @RequestParam("name") String name,
+            @RequestParam("price") Double price,
+            @RequestParam("description") String description,
+            @RequestParam("brandId") Long brandId,
+            @RequestParam("category") String categoryStr,
+            @RequestParam(value = "sizes", required = false) List<String> sizes,
+            @RequestParam(value = "colors", required = false) List<String> colors,
+            @RequestPart(value = "images", required = true) List<MultipartFile> images // ✅ 이미지 필수
     ) {
-        Long brandId = Long.parseLong(requestData.get("brandId").toString());
+        validateImages(images);
+
+        ProductCategory category = convertToCategory(categoryStr);
 
         ProductDto productDto = new ProductDto(
-                id,
-                (String) requestData.get("name"),
-                Double.valueOf(requestData.get("price").toString()),
-                (String) requestData.get("description"),
-                (String) requestData.get("imageUrl"),
-                (List<String>) requestData.get("sizes"),
-                (List<String>) requestData.get("colors"),
-                (String) requestData.get("category"), // ✅ 카테고리 추가
-                null,
-                null
+                id, name, price, description, null,
+                sizes != null ? sizes : List.of(),   // ✅ NULL 방지
+                colors != null ? colors : List.of(), // ✅ NULL 방지
+                null, null, category
         );
 
-        return ResponseEntity.ok(productService.updateProduct(id, productDto, brandId));
+        return ResponseEntity.ok(productService.updateProduct(id, productDto, images));
     }
 
     // ✅ 6. 상품 삭제
@@ -109,5 +117,21 @@ public class ProductController {
     public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(Map.of("message", "상품이 삭제되었습니다."));
+    }
+
+    // ✅ 이미지 유효성 검사 (비어있으면 예외 발생)
+    private void validateImages(List<MultipartFile> images) {
+        if (images == null || images.isEmpty()) {
+            throw new IllegalArgumentException("상품 이미지는 필수입니다.");
+        }
+    }
+
+    // ✅ 카테고리 변환 유틸리티
+    private ProductCategory convertToCategory(String categoryStr) {
+        try {
+            return ProductCategory.valueOf(categoryStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 카테고리 값입니다: " + categoryStr);
+        }
     }
 }
