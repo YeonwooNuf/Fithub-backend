@@ -1,7 +1,8 @@
 package com.example.musinsabackend.repository;
 
 import com.example.musinsabackend.model.Coupon;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.CouponDistributionType;
+import com.example.musinsabackend.model.UserCoupon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,14 +14,16 @@ import java.util.Optional;
 @Repository
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
-    // ✅ 특정 사용자의 쿠폰 목록 가져오기 (userId 기반)
-    List<Coupon> findByUser(User user);
+    // ✅ 자동 지급 쿠폰 조회
+    List<Coupon> findByDistributionType(CouponDistributionType distributionType);
 
-    // ✅ 특정 사용자의 특정 쿠폰 찾기 (userId 기반)
-    Optional<Coupon> findByIdAndUser(Long couponId, User user);
+    // ✅ 수동 쿠폰 코드로 쿠폰 찾기
+    Optional<Coupon> findByCouponCode(String couponCode);
 
-    // 특정 사용자의 쿠폰 개수 조회
-    @Query("SELECT COUNT(c) FROM Coupon c WHERE c.user.userId = :userId")
-    int countCouponsByUserId(@Param("userId") Long userId);
+    // ✅ 쿠폰 ID로 조회
+    Optional<Coupon> findById(Long couponId);
 
+    // ✅ 특정 쿠폰을 보유한 사용자 목록 조회 (관리자용)
+    @Query("SELECT uc FROM UserCoupon uc WHERE uc.coupon = :coupon")
+    List<UserCoupon> findUserCouponsByCoupon(@Param("coupon") Coupon coupon);
 }

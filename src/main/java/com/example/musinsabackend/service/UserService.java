@@ -6,7 +6,8 @@ import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
 import com.example.musinsabackend.model.Role;
 import com.example.musinsabackend.model.User;
-import com.example.musinsabackend.repository.CouponRepository;
+import com.example.musinsabackend.repository.PointRepository;
+import com.example.musinsabackend.repository.UserCouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,13 +23,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final CouponRepository couponRepository;
+    private final UserCouponRepository userCouponRepository;
 
-    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, CouponRepository couponRepository) {
+    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, UserCouponRepository userCouponRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
-        this.couponRepository = couponRepository;
+        this.userCouponRepository = userCouponRepository;
     }
 
     // 회원가입
@@ -80,9 +81,16 @@ public class UserService {
         userDto.setBirthdate(user.getBirthdate());
         userDto.setPhone(user.getPhone());
 
-        userDto.setCoupons(user.getCoupons().stream()
-                .map(coupon -> new CouponDto(coupon.getId(), coupon.getName(), coupon.getDiscount(), coupon.getExpiryDate(), coupon.isUsed()))
+        userDto.setCoupons(user.getUserCoupons().stream()  // ✅ UserCoupon으로 변경
+                .map(userCoupon -> new CouponDto(
+                        userCoupon.getCoupon().getId(),
+                        userCoupon.getCoupon().getName(),
+                        userCoupon.getCoupon().getDiscount(),
+                        userCoupon.getExpiryDate(),
+                        userCoupon.isUsed()  // ✅ 오류 해결
+                ))
                 .toList());
+
 
         userDto.setPoints(user.getPoints().stream()
                 .map(point -> new PointDto(point.getId(), point.getDescription(), point.getAmount(), point.getDate()))
@@ -99,7 +107,7 @@ public class UserService {
 
     // 쿠폰 개수 직접 가져오기
     public int getUserCouponCount(Long userId) {
-        return couponRepository.countCouponsByUserId(userId);
+        return userCouponRepository.countCouponsByUserId(userId);
     }
 
     // 전체 사용자 조회 (페이지네이션) - username, nickname, birthdate, phone, gender 포함

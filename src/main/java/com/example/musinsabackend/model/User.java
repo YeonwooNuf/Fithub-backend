@@ -27,9 +27,8 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.USER; // ✅ 기본값을 USER로 설정
 
-    // 관계 설정
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Coupon> coupons; // 쿠폰 관계
+    private List<UserCoupon> userCoupons;  // ✅ 수정된 부분
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Point> points; // 적립금 관계
@@ -44,10 +43,10 @@ public class User {
     private List<Asking> askings; // 문의 내역 관계
 
     // Getter와 Setter
+
     public Long getUserId() {
         return userId;
     }
-
     public void setUserId(Long userId) {
         this.userId = userId;
     }
@@ -116,12 +115,12 @@ public class User {
         this.profileImageUrl = profileImageUrl;
     }
 
-    public List<Coupon> getCoupons() {
-        return coupons;
+    public List<UserCoupon> getUserCoupons() {
+        return userCoupons;
     }
 
-    public void setCoupons(List<Coupon> coupons) {
-        this.coupons = coupons;
+    public void setUserCoupons(List<UserCoupon> userCoupons) {
+        this.userCoupons = userCoupons;
     }
 
     public List<Point> getPoints() {
