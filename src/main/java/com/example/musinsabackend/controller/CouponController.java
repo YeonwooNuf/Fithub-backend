@@ -67,6 +67,36 @@ public class CouponController {
         }
     }
 
+    // ✅ 사용자 쿠폰 코드 등록 (이벤트 페이지에서 받은 쿠폰 등록)
+    @PostMapping("/register")
+    public ResponseEntity<?> registerCouponByCode(@RequestHeader("Authorization") String token,
+                                                  @RequestBody Map<String, String> request) {
+        try {
+            token = token.replace("Bearer ", "");
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+            String couponCode = request.get("couponCode").toUpperCase();
+
+            CouponDto registeredCoupon = couponService.registerCouponByCode(userId, couponCode);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "쿠폰이 성공적으로 등록되었습니다.",
+                    "coupon", registeredCoupon
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("❌ 쿠폰 등록 중 오류 발생: ", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "쿠폰 등록 중 문제가 발생했습니다."
+            ));
+        }
+    }
+
     // ✅ 결제 페이지에서 쿠폰 사용 (추후 추가 예정)
     // @PostMapping("/use")
     // public ResponseEntity<?> useCoupon(...) { }

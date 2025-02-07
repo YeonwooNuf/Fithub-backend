@@ -24,4 +24,8 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
 
     // ✅ 사용자 쿠폰 삭제
     void delete(UserCoupon userCoupon);
+
+    // ✅ 사용자가 특정 쿠폰을 이미 보유하고 있는지 확인 (중복 등록 방지)
+    @Query("SELECT COUNT(uc) > 0 FROM UserCoupon uc WHERE uc.user = :user AND uc.coupon = :coupon")
+    boolean existsByUserAndCoupon(@Param("user") User user, @Param("coupon") Coupon coupon);
 }

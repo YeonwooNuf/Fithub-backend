@@ -79,7 +79,6 @@ public class CouponService {
                 userCouponRepository.save(userCoupon);
             }
         }
-
         log.info("✅ 쿠폰 등록 완료: 쿠폰 이름 = {}", coupon.getName());
     }
 
@@ -103,8 +102,6 @@ public class CouponService {
             userCoupon.setExpiryDate(updatedCouponDto.getExpiryDate());
             userCouponRepository.save(userCoupon);
         }
-
-        log.info("✅ 쿠폰 정보 수정 완료: 쿠폰 ID = {}", couponId);
     }
 
     // ✅ 쿠폰 삭제
@@ -119,7 +116,6 @@ public class CouponService {
         }
 
         couponRepository.delete(coupon);
-        log.info("✅ 쿠폰 삭제 완료: 쿠폰 ID = {}", couponId);
     }
 
 
@@ -141,6 +137,40 @@ public class CouponService {
                         coupon.getCouponCode()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    // ✅ 사용자 쿠폰 코드 등록 (이벤트 페이지에서 받은 쿠폰 등록)
+    public CouponDto registerCouponByCode(Long userId, String couponCode) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+
+        Coupon coupon = couponRepository.findByCouponCode(couponCode)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰 코드입니다."));
+
+        if (coupon.getDistributionType() != CouponDistributionType.MANUAL) {
+            throw new IllegalArgumentException("이 쿠폰은 수동 등록이 불가능한 쿠폰입니다.");
+        }
+
+        boolean alreadyRegistered = userCouponRepository.existsByUserAndCoupon(user, coupon);
+        if (alreadyRegistered) {
+            throw new IllegalArgumentException("이미 등록된 쿠폰입니다.");
+        }
+
+        if (coupon.getExpiryDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("이 쿠폰은 만료되었습니다.");
+        }
+
+        UserCoupon userCoupon = new UserCoupon();
+        userCoupon.setUser(user);
+        userCoupon.setCoupon(coupon);
+        userCoupon.setIssuedDate(LocalDate.now());
+        userCoupon.setExpiryDate(coupon.getExpiryDate());
+        userCoupon.setUsed(false);
+
+        userCouponRepository.save(userCoupon);
+
+        // ✅ 등록된 쿠폰 정보를 CouponDto로 변환하여 반환
+        return convertToDto(userCoupon);
     }
 
     // ✅ 임시로 오류 방지용 메서드 추가 (결제 기능 구현 전)
