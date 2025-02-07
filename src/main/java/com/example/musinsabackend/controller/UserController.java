@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 @RestController
@@ -16,6 +19,8 @@ public class UserController {
 
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private static final String UPLOAD_DIR = "/uploads/profile-images/";
+    private static final String DEFAULT_PROFILE_IMAGE = "/uploads/profile-images/default-profile.jpg";
 
     public UserController(UserService userService, JwtTokenProvider jwtTokenProvider) {
         this.userService = userService;
@@ -102,8 +107,18 @@ public class UserController {
     @GetMapping("/{userId}/profile-image")
     public ResponseEntity<?> getUserProfileImage(@PathVariable Long userId) {
         try {
-            User user = userService.findUserById(userId); // ✅ findUserById 사용
+            User user = userService.findUserById(userId);
             String profileImageUrl = user.getProfileImageUrl();
+
+            // ✅ 프로필 이미지가 없으면 기본 이미지로 대체
+            if (profileImageUrl == null || profileImageUrl.isEmpty()) {
+                profileImageUrl = DEFAULT_PROFILE_IMAGE;
+            } else {
+                Path imagePath = Paths.get(UPLOAD_DIR, profileImageUrl);
+                if (!Files.exists(imagePath)) {
+                    profileImageUrl = DEFAULT_PROFILE_IMAGE;
+                }
+            }
 
             return ResponseEntity.ok(Map.of("profileImageUrl", profileImageUrl));
         } catch (Exception e) {

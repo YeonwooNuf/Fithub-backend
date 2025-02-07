@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 public class BrandService {
 
     private final BrandRepository brandRepository;
-    private static final String UPLOAD_DIR = "uploads/brand-logos/";
+
+    // ✅ Docker에서도 동작하도록 절대 경로 설정
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/brand-logos/";
 
     // ✅ 모든 브랜드 조회
     public List<BrandDto> getAllBrands() {
@@ -42,7 +44,7 @@ public class BrandService {
 
         Brand brand = new Brand();
         brand.setName(name);
-        brand.setSubName(subName); // 🔥 한글 브랜드명 추가
+        brand.setSubName(subName);
         brand.setLogoUrl(logoUrl);
 
         brandRepository.save(brand);
@@ -55,7 +57,7 @@ public class BrandService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 브랜드가 존재하지 않습니다."));
 
         brand.setName(name);
-        brand.setSubName(subName); // 🔥 한글 브랜드명 수정 가능
+        brand.setSubName(subName);
         if (logoFile != null && !logoFile.isEmpty()) {
             brand.setLogoUrl(saveFile(logoFile));
         }
@@ -64,8 +66,12 @@ public class BrandService {
         return BrandDto.fromEntity(brand);
     }
 
-    // ✅ 브랜드 삭제
+    // ✅ 브랜드 삭제 (로고 파일도 삭제)
     public void deleteBrand(Long id) {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 브랜드가 존재하지 않습니다."));
+
+        deleteFile(brand.getLogoUrl());
         brandRepository.deleteById(id);
     }
 
@@ -77,13 +83,28 @@ public class BrandService {
                 Files.createDirectories(uploadPath);
             }
 
-            String fileName = file.getOriginalFilename();
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath);
+            // ✅ 파일 이름 중복 방지 (UUID 추가)
+            String originalFileName = file.getOriginalFilename();
+            String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
+            Path filePath = uploadPath.resolve(uniqueFileName);
 
-            return "/uploads/brand-logos/" + fileName;
-        } catch (Exception e) {
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            return "/uploads/brand-logos/" + uniqueFileName;
+        } catch (IOException e) {
             throw new RuntimeException("파일 저장 중 오류 발생: " + e.getMessage());
+        }
+    }
+
+    // ✅ 파일 삭제 메소드
+    private void deleteFile(String logoUrl) {
+        try {
+            Path filePath = Paths.get(System.getProperty("user.dir") + logoUrl);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+        } catch (IOException e) {
+            System.out.println("❌ 파일 삭제 중 오류 발생: " + e.getMessage());
         }
     }
 }
