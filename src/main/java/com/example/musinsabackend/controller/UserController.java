@@ -19,8 +19,8 @@ public class UserController {
 
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
-    private static final String UPLOAD_DIR = "/uploads/profile-images/";
-    private static final String DEFAULT_PROFILE_IMAGE = "/uploads/profile-images/default-profile.jpg";
+    private static final String UPLOAD_DIR = "/app/uploads/profile-images/";
+    private static final String DEFAULT_PROFILE_IMAGE = "/app/uploads/profile-images/default-profile.jpg";
 
     public UserController(UserService userService, JwtTokenProvider jwtTokenProvider) {
         this.userService = userService;
@@ -90,10 +90,10 @@ public class UserController {
                     "userId", user.getUserId(),
                     "username", user.getUsername(),
                     "nickname", user.getNickname(),
-                    "profileImageUrl", user.getProfileImageUrl(),
-                    "totalPoints", user.getPoints(), // 적립금
+                    "profileImageUrl", "/uploads/profile-images/" + user.getProfileImageUrl(), // ✅ 추가
+                    "totalPoints", user.getPoints(),    // 적립금
                     "role", user.getRole(),
-                    "unusedCoupons", couponCount // 사용하지 않은 쿠폰 개수
+                    "unusedCoupons", couponCount        // 사용하지 않은 쿠폰 개수
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -103,26 +103,29 @@ public class UserController {
         }
     }
 
-    // ✅ 사용자의 프로필 이미지 조회 (프론트에서 추가 요청 가능)
-    @GetMapping("/{userId}/profile-image")
-    public ResponseEntity<?> getUserProfileImage(@PathVariable Long userId) {
+    // ✅ 사용자의 프로필 이미지 조회
+    @GetMapping("/mypage/profile-image")
+    public ResponseEntity<?> getUserProfileImage(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 요청입니다."
+            ));
+        }
         try {
-            User user = userService.findUserById(userId);
-            String profileImageUrl = user.getProfileImageUrl();
+            String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
+            User user = userService.findUserByUsername(username);
+            String profileImageUrl = "/uploads/profile-images/" + user.getProfileImageUrl();
 
-            // ✅ 프로필 이미지가 없으면 기본 이미지로 대체
-            if (profileImageUrl == null || profileImageUrl.isEmpty()) {
-                profileImageUrl = DEFAULT_PROFILE_IMAGE;
-            } else {
-                Path imagePath = Paths.get(UPLOAD_DIR, profileImageUrl);
-                if (!Files.exists(imagePath)) {
-                    profileImageUrl = DEFAULT_PROFILE_IMAGE;
-                }
-            }
-
-            return ResponseEntity.ok(Map.of("profileImageUrl", profileImageUrl));
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "profileImageUrl", profileImageUrl
+            ));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "사용자를 찾을 수 없습니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "프로필 이미지를 불러오는 중 오류가 발생했습니다."
+            ));
         }
     }
 }

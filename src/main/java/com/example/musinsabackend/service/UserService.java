@@ -47,7 +47,7 @@ public class UserService {
         user.setBirthdate(userDto.getBirthdate());
         user.setPhone(userDto.getPhone());
         user.setProfileImageUrl(
-                userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile-image-url"
+                userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile.jpg"
         );
 
         user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.USER);

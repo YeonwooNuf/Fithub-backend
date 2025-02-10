@@ -21,7 +21,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
 
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/clothes-images/";
+    private static final String UPLOAD_DIR = "/app/uploads/clothes-images/";
 
     public ProductService(ProductRepository productRepository, BrandRepository brandRepository) {
         this.productRepository = productRepository;

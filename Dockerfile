@@ -4,14 +4,23 @@
 FROM openjdk:17-jdk-slim AS development
 WORKDIR /app
 
-# Gradle 캐시 활용을 위해 필요한 파일 먼저 복사
+# Gradle 캐시 폴더 설정 (빌드 속도 최적화)
+VOLUME ["/root/.gradle"]
+
+# Gradle Wrapper 권한 설정
+COPY gradlew .
+RUN chmod +x gradlew
+
+# Gradle 설정 파일 복사
 COPY build.gradle settings.gradle .
 COPY gradle gradle
-RUN ./gradlew build -x test || return 0  # 테스트는 개발 단계에서 생략 가능
+
+# 의존성 캐시 활용
+RUN ./gradlew dependencies --no-daemon || return 0
 
 # 전체 소스 코드 복사 후 빌드
 COPY . .
-RUN ./gradlew build -x test
+RUN ./gradlew build -x test --no-daemon
 
 # 핫 리로드를 위한 DevTools 설정
 EXPOSE 8080
@@ -21,9 +30,9 @@ CMD ["java", "-jar", "build/libs/MusinsaBackend-0.0.1-SNAPSHOT.jar"]
 FROM openjdk:17-jdk-slim AS production
 WORKDIR /app
 
-# 개발 단계에서 빌드한 JAR 파일 복사
+# 빌드한 JAR 파일 복사 (이름 고정)
 COPY --from=development /app/build/libs/*.jar app.jar
 
-# 최적화된 설정으로 애플리케이션 실행
+# JVM 성능 최적화 옵션 추가
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-XX:+UseG1GC", "-jar", "app.jar"]

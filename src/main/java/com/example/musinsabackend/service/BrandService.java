@@ -20,7 +20,7 @@ public class BrandService {
     private final BrandRepository brandRepository;
 
     // ✅ Docker에서도 동작하도록 절대 경로 설정
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/brand-logos/";
+    private static final String UPLOAD_DIR = "/app/uploads/brand-logos/";
 
     // ✅ 모든 브랜드 조회
     public List<BrandDto> getAllBrands() {

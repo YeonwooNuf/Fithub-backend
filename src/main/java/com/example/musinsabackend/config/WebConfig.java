@@ -8,7 +8,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/brand-logos/**")
-                .addResourceLocations("file:uploads/brand-logos/");
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:/app/uploads/") // ✅ uploads 전체 폴더 허용
+                .setCachePeriod(0); // 캐시 무효화
     }
 }

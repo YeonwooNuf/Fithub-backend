@@ -49,15 +49,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/register").permitAll()
-                        .requestMatchers("/api/public/**", "/uploads/brand-logos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // ✅ 모든 uploads 폴더 하위 접근 허용
                         .requestMatchers("/api/users/mypage").authenticated()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOriginPattern("*");  // ✅ 모든 출처 허용
-                    corsConfig.addAllowedMethod("*");         // ✅ 모든 HTTP 메서드 허용
-                    corsConfig.addAllowedHeader("*");         // ✅ 모든 헤더 허용
+                    corsConfig.addAllowedOriginPattern("*");
+                    corsConfig.addAllowedMethod("*");
+                    corsConfig.addAllowedHeader("*");
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
@@ -65,6 +65,8 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        System.out.println("✅ Security Filter Chain Initialized");
 
         return http.build();
     }

@@ -63,6 +63,13 @@ public class CouponService {
         coupon.setDistributionType(couponDto.getDistributionType());
         coupon.setCouponCode(couponDto.getCouponCode());
 
+        // ✅ 자동 지급 쿠폰은 couponCode를 null로 처리
+        if (couponDto.getDistributionType() == CouponDistributionType.AUTO) {
+            coupon.setCouponCode(null);
+        } else {
+            coupon.setCouponCode(couponDto.getCouponCode().toUpperCase());
+        }
+        
         couponRepository.save(coupon);
 
         // 자동 지급 쿠폰인 경우 모든 사용자에게 발급
