@@ -69,7 +69,7 @@ public class CouponService {
         } else {
             coupon.setCouponCode(couponDto.getCouponCode().toUpperCase());
         }
-        
+
         couponRepository.save(coupon);
 
         // 자동 지급 쿠폰인 경우 모든 사용자에게 발급

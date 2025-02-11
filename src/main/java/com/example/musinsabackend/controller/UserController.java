@@ -90,10 +90,10 @@ public class UserController {
                     "userId", user.getUserId(),
                     "username", user.getUsername(),
                     "nickname", user.getNickname(),
-                    "profileImageUrl", "/uploads/profile-images/" + user.getProfileImageUrl(), // ✅ 추가
+                    "unusedCoupons", couponCount,       // 사용하지 않은 쿠폰 개수
                     "totalPoints", user.getPoints(),    // 적립금
                     "role", user.getRole(),
-                    "unusedCoupons", couponCount        // 사용하지 않은 쿠폰 개수
+                    "profileImageUrl", "/uploads/profile-images/" + user.getProfileImageUrl() // ✅ 추가
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(

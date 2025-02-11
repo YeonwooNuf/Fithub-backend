@@ -1,4 +1,4 @@
-package com.example.musinsabackend.controller;
+package com.example.musinsabackend.controller.admin;
 
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.service.UserService;

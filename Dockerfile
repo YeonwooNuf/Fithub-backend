@@ -12,7 +12,7 @@ COPY gradlew .
 RUN chmod +x gradlew
 
 # Gradle 설정 파일 복사
-COPY build.gradle settings.gradle .
+COPY build.gradle settings.gradle
 COPY gradle gradle
 
 # 의존성 캐시 활용

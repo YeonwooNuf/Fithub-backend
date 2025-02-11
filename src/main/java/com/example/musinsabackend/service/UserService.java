@@ -6,7 +6,6 @@ import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
 import com.example.musinsabackend.model.Role;
 import com.example.musinsabackend.model.User;
-import com.example.musinsabackend.repository.PointRepository;
 import com.example.musinsabackend.repository.UserCouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -47,7 +46,9 @@ public class UserService {
         user.setBirthdate(userDto.getBirthdate());
         user.setPhone(userDto.getPhone());
         user.setProfileImageUrl(
-                userDto.getProfileImageUrl() != null ? userDto.getProfileImageUrl() : "default-profile.jpg"
+                (userDto.getProfileImageUrl() != null && !userDto.getProfileImageUrl().isEmpty())
+                        ? userDto.getProfileImageUrl()
+                        : "default-profile.jpg"
         );
 
         user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.USER);
