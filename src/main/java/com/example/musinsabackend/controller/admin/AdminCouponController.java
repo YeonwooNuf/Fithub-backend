@@ -37,11 +37,25 @@ public class AdminCouponController {
         }
     }
 
-    // ✅ 쿠폰 목록 조회 (관리자용)
+    // ✅ 전체 쿠폰 목록 조회 (관리자용)
     @GetMapping("/list")
     public ResponseEntity<List<CouponDto>> getAllCoupons() {
         List<CouponDto> coupons = couponService.getAllCoupons();
         return ResponseEntity.ok(coupons);
+    }
+
+    // ✅ 유효한 쿠폰 조회
+    @GetMapping("/valid")
+    public ResponseEntity<List<CouponDto>> getValidCoupons() {
+        List<CouponDto> validCoupons = couponService.getValidCoupons();
+        return ResponseEntity.ok(validCoupons);
+    }
+
+    // ✅ 만료된 쿠폰 조회
+    @GetMapping("/expired")
+    public ResponseEntity<List<CouponDto>> getExpiredCoupons() {
+        List<CouponDto> expiredCoupons = couponService.getExpiredCoupons();
+        return ResponseEntity.ok(expiredCoupons);
     }
 
     // ✅ 쿠폰 수정

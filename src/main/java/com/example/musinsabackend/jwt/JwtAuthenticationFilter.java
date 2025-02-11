@@ -31,22 +31,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-        System.out.println("🟡 [JwtFilter] Authorization 헤더 값: " + authHeader);
+        log.info("🔍 요청 URL: {}", request.getRequestURI());
+        log.info("🟡 Authorization 헤더 값: {}", authHeader);
 
         String token = resolveToken(request);
-        System.out.println("🟡 [JwtFilter] 추출된 토큰: " + token);
+        log.info("🟡 추출된 토큰: {}", token);
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
-            System.out.println("🟡 [JwtFilter] 인증된 사용자: " + username);
+            log.info("✅ 인증된 사용자: {}", username);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            log.info("✅ 사용자 권한: {}", userDetails.getAuthorities());
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } else {
-            System.out.println("❌ [JwtFilter] 유효하지 않은 토큰");
+            log.warn("❌ 유효하지 않은 토큰 또는 토큰 없음 (URL: {})", request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

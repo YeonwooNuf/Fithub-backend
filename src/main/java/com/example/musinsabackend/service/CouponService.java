@@ -26,23 +26,26 @@ public class CouponService {
     @Autowired
     private UserCouponRepository userCouponRepository;
 
-    // ✅ 사용자 보유 쿠폰 목록 조회 (만료된 쿠폰 자동 삭제)
+    // ✅ 사용자 보유 쿠폰 목록 조회 (만료된 쿠폰 필터링 후 반환)
     public List<CouponDto> getUserCoupons(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
 
         List<UserCoupon> userCoupons = userCouponRepository.findUserCouponsByUser(user);
 
-        // 만료된 쿠폰 삭제
-        userCoupons.removeIf(userCoupon -> {
-            if (userCoupon.getExpiryDate().isBefore(LocalDate.now()) || userCoupon.isUsed()) {
-                userCouponRepository.delete(userCoupon);
-                return true;
-            }
-            return false;
-        });
+//        // 만료된 쿠폰 삭제
+//        userCoupons.removeIf(userCoupon -> {
+//            if (userCoupon.getExpiryDate().isBefore(LocalDate.now()) || userCoupon.isUsed()) {
+//                userCouponRepository.delete(userCoupon);
+//                return true;
+//            }
+//            return false;
+//        });
 
-        return userCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
+        return userCoupons.stream()
+                .filter(userCoupon -> userCoupon.getExpiryDate().isAfter(LocalDate.now()))  // 만료된 쿠폰 필터링
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     // ✅ 마이페이지에서 현재 보유 쿠폰 개수 조회
@@ -125,7 +128,6 @@ public class CouponService {
         couponRepository.delete(coupon);
     }
 
-
     // ✅ 현재 등록된 쿠폰 목록 조회
     public List<CouponDto> getAllCoupons() {
         return couponRepository.findAll().stream()
@@ -180,12 +182,26 @@ public class CouponService {
         return convertToDto(userCoupon);
     }
 
+    // ✅ 관리자용: 만료된 쿠폰 조회
+    public List<CouponDto> getExpiredCoupons() {
+        LocalDate today = LocalDate.now();
+        List<Coupon> expiredCoupons = couponRepository.findByExpiryDateBefore(today);
+        return expiredCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    // ✅ 관리자용: 유효한 쿠폰 조회
+    public List<CouponDto> getValidCoupons() {
+        LocalDate today = LocalDate.now();
+        List<Coupon> validCoupons = couponRepository.findByExpiryDateAfterOrExpiryDateEquals(today, today);
+        return validCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
     // ✅ 임시로 오류 방지용 메서드 추가 (결제 기능 구현 전)
     public Coupon validateAndUseCoupon(Long userId, Long couponId) {
         return new Coupon();  // 빈 Coupon 객체 반환 (임시 처리)
     }
 
-    // ✅ 쿠폰 DTO 변환
+    // ✅ User 쿠폰용 DTO 변환
     private CouponDto convertToDto(UserCoupon userCoupon) {
         Coupon coupon = userCoupon.getCoupon();
         return new CouponDto(
@@ -197,6 +213,24 @@ public class CouponService {
                 userCoupon.getIssuedDate(),
                 userCoupon.getExpiryDate(),
                 userCoupon.isUsed(),
+                coupon.getTarget(),
+                coupon.getTargetValue(),
+                coupon.getDistributionType(),
+                coupon.getCouponCode()
+        );
+    }
+
+    // ✅ 새로운 Coupon용 DTO 변환
+    private CouponDto convertToDto(Coupon coupon) {
+        return new CouponDto(
+                coupon.getId(),
+                coupon.getName(),
+                coupon.getDiscount(),
+                coupon.getMaxDiscountAmount(),
+                coupon.getDescription(),
+                null, // UserCoupon이 없으므로 issuedDate는 null 처리
+                coupon.getExpiryDate(),
+                false, // 기본적으로 사용되지 않음
                 coupon.getTarget(),
                 coupon.getTargetValue(),
                 coupon.getDistributionType(),
