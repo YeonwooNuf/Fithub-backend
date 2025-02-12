@@ -1,8 +1,8 @@
-package com.example.musinsabackend.controller;
+package com.example.musinsabackend.controller.admin;
 
 import com.example.musinsabackend.dto.ProductDto;
 import com.example.musinsabackend.model.ProductCategory;
-import com.example.musinsabackend.service.ProductService;
+import com.example.musinsabackend.service.admin.AdminProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -16,11 +16,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/products")
 @CrossOrigin(origins = "http://localhost:3000")
-public class ProductController {
+public class AdminProductController {
 
-    private final ProductService productService;
+    private final AdminProductService productService;
 
-    public ProductController(ProductService productService) {
+    public AdminProductController(AdminProductService productService) {
         this.productService = productService;
     }
 
@@ -77,9 +77,9 @@ public class ProductController {
 
         ProductDto productDto = new ProductDto(
                 null, name, price, description, null,
-                sizes != null ? sizes : List.of(),   // ✅ NULL 방지
-                colors != null ? colors : List.of(), // ✅ NULL 방지
-                null, null, category
+                sizes != null ? sizes : List.of(""),   // ✅ NULL 방지
+                colors != null ? colors : List.of(""), // ✅ NULL 방지
+                null, null, category, 0, false          // ✅ 좋아요 상태 기본값 false
         );
 
         return ResponseEntity.ok(productService.addProduct(productDto, brandId, images));
@@ -104,9 +104,9 @@ public class ProductController {
 
         ProductDto productDto = new ProductDto(
                 id, name, price, description, null,
-                sizes != null ? sizes : List.of(),   // ✅ NULL 방지
-                colors != null ? colors : List.of(), // ✅ NULL 방지
-                null, null, category
+                sizes != null ? sizes : List.of(""),   // ✅ NULL 방지
+                colors != null ? colors : List.of(""), // ✅ NULL 방지
+                null, null, category, 0, false          // ✅ 좋아요 상태 기본값 false
         );
 
         return ResponseEntity.ok(productService.updateProduct(id, productDto, images));

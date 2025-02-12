@@ -1,10 +1,11 @@
-package com.example.musinsabackend.service;
+package com.example.musinsabackend.service.admin;
 
 import com.example.musinsabackend.dto.ProductDto;
 import com.example.musinsabackend.model.Brand;
 import com.example.musinsabackend.model.Product;
 import com.example.musinsabackend.repository.BrandRepository;
-import com.example.musinsabackend.repository.ProductRepository;
+import com.example.musinsabackend.repository.admin.AdminProductRepository;
+import com.example.musinsabackend.repository.user.LikeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,16 +17,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductService {
+public class AdminProductService {
 
-    private final ProductRepository productRepository;
+    private final AdminProductRepository productRepository;
     private final BrandRepository brandRepository;
+    private final LikeRepository likeRepository; // ✅ 좋아요 데이터 관리 (Optional)
 
-    private static final String UPLOAD_DIR = "/app/uploads/clothes-images/";
+    private static final String UPLOAD_DIR = "/app/uploads/cloth-images/";
 
-    public ProductService(ProductRepository productRepository, BrandRepository brandRepository) {
+    public AdminProductService(AdminProductRepository productRepository, BrandRepository brandRepository, LikeRepository likeRepository) {
         this.productRepository = productRepository;
         this.brandRepository = brandRepository;
+        this.likeRepository = likeRepository;
     }
 
     public Page<ProductDto> getAllProducts(Pageable pageable) {
@@ -62,8 +65,8 @@ public class ProductService {
         product.setPrice(productDto.getPrice());
         product.setDescription(productDto.getDescription());
         product.setImages(imageUrls);
-        product.setSizes(Optional.ofNullable(productDto.getSizes()).orElse(new ArrayList<>()));
-        product.setColors(Optional.ofNullable(productDto.getColors()).orElse(new ArrayList<>()));
+        product.setSizes(productDto.getSizes());
+        product.setColors(productDto.getColors());
         product.setCategory(productDto.getCategory());
         product.setBrand(brand);
 
@@ -85,8 +88,8 @@ public class ProductService {
         existingProduct.setPrice(productDto.getPrice());
         existingProduct.setDescription(productDto.getDescription());
         existingProduct.setImages(imageUrls);
-        existingProduct.setSizes(Optional.ofNullable(productDto.getSizes()).orElse(new ArrayList<>()));
-        existingProduct.setColors(Optional.ofNullable(productDto.getColors()).orElse(new ArrayList<>()));
+        existingProduct.setSizes(productDto.getSizes());
+        existingProduct.setColors(productDto.getColors());
         existingProduct.setCategory(productDto.getCategory());
 
         productRepository.save(existingProduct);
@@ -96,6 +99,10 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다."));
+
+        // ✅ 좋아요 데이터 삭제 (Optional)
+        likeRepository.deleteByProductId(product.getId());
+
         deleteFiles(product.getImages());
         productRepository.delete(product);
     }
@@ -116,14 +123,14 @@ public class ProductService {
                     Path filePath = uploadPath.resolve(uniqueFileName);
                     Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-                    return "/uploads/clothes-images/" + uniqueFileName;
-                } catch (Exception e) {
-                    throw new RuntimeException("파일 저장 중 오류 발생: " + e.getMessage());
+                    return "/uploads/cloth-images/" + uniqueFileName;
+                } catch (IOException e) {
+                    throw new IllegalStateException("파일 저장 중 오류 발생: " + e.getMessage());
                 }
             }).collect(Collectors.toList());
 
-        } catch (Exception e) {
-            throw new RuntimeException("디렉토리 생성 실패: " + e.getMessage());
+        } catch (IOException e) {
+            throw new IllegalStateException("디렉토리 생성 실패: " + e.getMessage());
         }
     }
 
@@ -131,7 +138,7 @@ public class ProductService {
         if (imageUrls != null && !imageUrls.isEmpty()) {
             imageUrls.forEach(imageUrl -> {
                 try {
-                    Path filePath = Paths.get(System.getProperty("user.dir") + imageUrl);
+                    Path filePath = Paths.get(UPLOAD_DIR + imageUrl.substring(imageUrl.lastIndexOf("/") + 1));
                     Files.deleteIfExists(filePath);
                 } catch (IOException e) {
                     System.err.println("파일 삭제 실패: " + e.getMessage());

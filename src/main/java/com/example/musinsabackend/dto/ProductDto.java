@@ -3,7 +3,9 @@ package com.example.musinsabackend.dto;
 import com.example.musinsabackend.model.Product;
 import com.example.musinsabackend.model.ProductCategory;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProductDto {
     private Long id;
@@ -16,36 +18,47 @@ public class ProductDto {
     private String brandName;    // 브랜드명
     private String brandLogoUrl; // ✅ 브랜드 로고 추가
     private ProductCategory category; // ✅ 상품 카테고리 추가
+    private int likeCount;       // ✅ 좋아요 수 추가
+    private boolean likedByCurrentUser; // ✅ 현재 로그인한 사용자의 좋아요 여부 추가
 
     // ✅ 생성자
     public ProductDto(Long id, String name, Double price, String description,
                       List<String> images, List<String> sizes, List<String> colors,
-                      String brandName, String brandLogoUrl, ProductCategory category) {
+                      String brandName, String brandLogoUrl, ProductCategory category,
+                      int likeCount, boolean likedByCurrentUser) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.description = description;
-        this.images = images != null ? images : List.of(); // ✅ null 방지
-        this.sizes = sizes != null ? sizes : List.of();
-        this.colors = colors != null ? colors : List.of();
+        this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
+        this.sizes = sizes != null ? new ArrayList<>(sizes) : new ArrayList<>();
+        this.colors = colors != null ? new ArrayList<>(colors) : new ArrayList<>();
         this.brandName = brandName;
         this.brandLogoUrl = brandLogoUrl;
         this.category = category;
+        this.likeCount = likeCount;
+        this.likedByCurrentUser = likedByCurrentUser;
     }
 
     // ✅ 엔티티 → DTO 변환 메서드
     public static ProductDto fromEntity(Product product) {
+        List<String> imageUrls = product.getImages().stream()
+                .map(image -> "http://localhost:8080" + image) // ✅ 절대 경로로 변환
+                .collect(Collectors.toList());
+
         return new ProductDto(
                 product.getId(),
                 product.getName(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getImages() != null ? product.getImages() : List.of(), // ✅ null 방지
-                product.getSizes(), // ✅ JSON 변환 없이 직접 사용
-                product.getColors(), // ✅ JSON 변환 없이 직접 사용
+                imageUrls,
+                product.getSizes(),
+                product.getColors(),
                 product.getBrand() != null ? product.getBrand().getName() : "",
-                product.getBrand() != null ? product.getBrand().getLogoUrl() : "", // ✅ null 대신 빈 문자열
-                product.getCategory()
+                product.getBrand() != null ? "http://localhost:8080/uploads/brand-logos/" + product.getBrand().getLogoUrl() : "",
+                product.getCategory(),
+                product.getLikeCount(),
+                product.isLikedByCurrentUser()
         );
     }
 
@@ -79,4 +92,10 @@ public class ProductDto {
 
     public ProductCategory getCategory() { return category; }
     public void setCategory(ProductCategory category) { this.category = category; }
+
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
+
+    public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
+    public void setLikedByCurrentUser(boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }
 }

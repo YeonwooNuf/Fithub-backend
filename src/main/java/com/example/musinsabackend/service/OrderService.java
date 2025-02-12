@@ -6,7 +6,7 @@ import com.example.musinsabackend.model.OrderStatus;
 import com.example.musinsabackend.model.Product;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.OrderRepository;
-import com.example.musinsabackend.repository.ProductRepository;
+import com.example.musinsabackend.repository.admin.AdminProductRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class OrderService {
     private UserRepository userRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private AdminProductRepository productRepository;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 

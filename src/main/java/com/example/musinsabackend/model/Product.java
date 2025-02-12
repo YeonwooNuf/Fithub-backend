@@ -23,8 +23,12 @@ public class Product {
     @Column(nullable = false, length = 1000)
     private String description;
 
+    // ✅ 좋아요 수 저장
+    @Column(nullable = false)
+    private int likeCount = 0;
+
     // ✅ 여러 장의 이미지 저장
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url", nullable = false)
     private List<String> images;
@@ -47,6 +51,14 @@ public class Product {
     @Column(nullable = false)
     private ProductCategory category;
 
+    // ✅ 좋아요 목록 추가
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes;
+
+    // ✅ 현재 로그인한 사용자의 좋아요 여부 (엔티티에는 저장되지 않고 DTO로 처리)
+    @Transient
+    private boolean likedByCurrentUser;
+
     // ✅ 기본 생성자
     public Product() {}
 
@@ -57,8 +69,8 @@ public class Product {
         this.price = price;
         this.description = description;
         this.images = images;
-        setSizes(sizes); // JSON 변환
-        setColors(colors); // JSON 변환
+        setSizes(sizes);
+        setColors(colors);
         this.brand = brand;
         this.category = category;
     }
@@ -68,7 +80,7 @@ public class Product {
         try {
             return objectMapper.readValue(sizes, new TypeReference<List<String>>() {});
         } catch (Exception e) {
-            return List.of(); // 변환 실패 시 빈 리스트 반환
+            return List.of();
         }
     }
 
@@ -85,7 +97,7 @@ public class Product {
         try {
             this.sizes = objectMapper.writeValueAsString(sizes);
         } catch (Exception e) {
-            this.sizes = "[]"; // 변환 실패 시 빈 JSON 배열 저장
+            this.sizes = "[]";
         }
     }
 
@@ -95,6 +107,30 @@ public class Product {
         } catch (Exception e) {
             this.colors = "[]";
         }
+    }
+
+    // ✅ 좋아요 기능 관련 메서드
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    // ✅ 로그인한 사용자의 좋아요 여부 Getter & Setter
+    public boolean isLikedByCurrentUser() {
+        return likedByCurrentUser;
+    }
+
+    public void setLikedByCurrentUser(boolean likedByCurrentUser) {
+        this.likedByCurrentUser = likedByCurrentUser;
     }
 
     // ✅ Getter & Setter
@@ -118,4 +154,7 @@ public class Product {
 
     public ProductCategory getCategory() { return category; }
     public void setCategory(ProductCategory category) { this.category = category; }
+
+    public List<Like> getLikes() { return likes; }
+    public void setLikes(List<Like> likes) { this.likes = likes; }
 }
