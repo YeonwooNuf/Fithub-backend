@@ -24,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword()) // Spring Security에서 비밀번호 검증을 위해 필요
-                .roles("USER") // 기본적으로 USER 역할 부여 (Role-based access 설정 가능)
+                .roles("USER","ADMIN") // 기본적으로 USER 역할 부여 (Role-based access 설정 가능)
                 .build();
     }
 }

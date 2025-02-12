@@ -17,6 +17,8 @@ import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -49,8 +51,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // ✅ 모든 uploads 폴더 하위 접근 허용
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers("/api/users/mypage").authenticated()
+                        .requestMatchers("/api/likes/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(request -> {
@@ -61,12 +64,23 @@ public class SecurityConfig {
                     corsConfig.setAllowCredentials(true);
                     return corsConfig;
                 }))
-                .formLogin(login -> login.disable())
-                .httpBasic(httpBasic -> httpBasic.disable());
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            logger.warn("❌ 인증 실패: {}", authException.getMessage());
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            logger.warn("❌ 접근 거부: {}", accessDeniedException.getMessage());
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "접근 권한이 없습니다.");
+                        })
+                );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        System.out.println("✅ Security Filter Chain Initialized");
+
+        logger.info("✅ Security Filter Chain Initialized");
 
         return http.build();
     }

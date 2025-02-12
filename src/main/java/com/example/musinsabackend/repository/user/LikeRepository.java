@@ -2,6 +2,7 @@ package com.example.musinsabackend.repository.user;
 
 import com.example.musinsabackend.model.Like;
 import com.example.musinsabackend.model.Product;
+import com.example.musinsabackend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,6 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
+
+    // ✅ 유저와 상품으로 좋아요 조회
+    Optional<Like> findByUserAndProduct(User user, Product product);
 
     Optional<Like> findByUser_UserIdAndProduct_Id(Long userId, Long productId);
 

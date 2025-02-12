@@ -8,6 +8,7 @@ import com.example.musinsabackend.model.Role;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.UserCouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -143,6 +144,7 @@ public class UserService {
         );
     }
 
+    @Transactional
     // ✅ 사용자 삭제 (Hard Delete)
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {

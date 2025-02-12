@@ -16,10 +16,10 @@ public class ProductDto {
     private List<String> sizes;  // ✅ JSON 변환 없이 유지
     private List<String> colors; // ✅ JSON 변환 없이 유지
     private String brandName;    // 브랜드명
-    private String brandLogoUrl; // ✅ 브랜드 로고 추가
-    private ProductCategory category; // ✅ 상품 카테고리 추가
-    private int likeCount;       // ✅ 좋아요 수 추가
-    private boolean likedByCurrentUser; // ✅ 현재 로그인한 사용자의 좋아요 여부 추가
+    private String brandLogoUrl; // ✅ 브랜드 로고
+    private ProductCategory category; // ✅ 상품 카테고리
+    private int likeCount;       // ✅ 좋아요 수
+    private boolean likedByCurrentUser; // ✅ 현재 로그인한 사용자의 좋아요 여부
 
     // ✅ 생성자
     public ProductDto(Long id, String name, Double price, String description,

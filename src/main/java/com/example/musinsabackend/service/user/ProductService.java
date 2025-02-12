@@ -84,10 +84,16 @@ public class ProductService {
 
     // 좋아요 상태 설정 후 DTO 변환
     private ProductDto mapToProductDtoWithLikeStatus(Product product, Long userId) {
+        boolean liked = false;
+
+        // 로그인한 사용자의 좋아요 상태 확인
         if (userId != null) {
-            boolean liked = likeRepository.existsByUser_UserIdAndProduct_Id(userId, product.getId());
-            product.setLikedByCurrentUser(liked);
+            liked = likeRepository.existsByUser_UserIdAndProduct_Id(userId, product.getId());
         }
-        return ProductDto.fromEntity(product);
+        // ProductDto 생성 시 liked 상태 전달
+        ProductDto productDto = ProductDto.fromEntity(product);
+        productDto.setLikedByCurrentUser(liked);
+
+        return productDto;
     }
 }

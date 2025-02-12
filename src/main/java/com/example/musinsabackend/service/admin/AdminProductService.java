@@ -6,6 +6,7 @@ import com.example.musinsabackend.model.Product;
 import com.example.musinsabackend.repository.BrandRepository;
 import com.example.musinsabackend.repository.admin.AdminProductRepository;
 import com.example.musinsabackend.repository.user.LikeRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -96,6 +97,7 @@ public class AdminProductService {
         return ProductDto.fromEntity(existingProduct);
     }
 
+    @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다."));

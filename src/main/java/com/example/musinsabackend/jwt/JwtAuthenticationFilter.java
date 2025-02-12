@@ -9,10 +9,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Slf4j
 @Component
@@ -39,13 +41,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
+            String role = jwtTokenProvider.extractClaims(token).get("role", String.class); // ✅ 역할 정보 추출
+
             log.info("✅ 인증된 사용자: {}", username);
+            log.info("✅ 사용자 역할: {}", role);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             log.info("✅ 사용자 권한: {}", userDetails.getAuthorities());
 
             UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority(role)) // ✅ 권한 추가
+                    );
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } else {

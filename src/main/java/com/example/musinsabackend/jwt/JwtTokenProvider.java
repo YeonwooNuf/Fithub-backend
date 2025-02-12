@@ -28,18 +28,19 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("userId", user.getUserId())
+                .claim("role", "ROLE_USER")  // ✅ 역할 정보 추가
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1일
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // ✅ 보안 강화된 키 사용
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     // ✅ Claims 추출 (공통 메서드)
-    private Claims extractClaims(String token) {
+    public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token.replace("Bearer ", ""))
+                .parseClaimsJws(token)  // ✅ "Bearer" 제거 코드 삭제
                 .getBody();
     }
 
