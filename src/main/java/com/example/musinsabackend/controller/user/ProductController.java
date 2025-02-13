@@ -47,7 +47,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        final Long currentUserId;
+        final Long currentUserId;   
 
         // ✅ JWT 토큰에서 userId 추출
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
