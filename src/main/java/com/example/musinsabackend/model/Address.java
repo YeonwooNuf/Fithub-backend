@@ -19,7 +19,7 @@ public class Address {
     private User user; // 사용자 정보
 
     @Column(nullable = false)
-    private String postCode; // ✅ 우편번호
+    private String zonecode; // ✅ 우편번호
 
     @Column(nullable = false)
     private String roadAddress; // ✅ 도로명 주소
@@ -36,9 +36,9 @@ public class Address {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isDefault; // ✅ 기본 배송지 여부
 
-    public Address(User user, String postCode, String roadAddress, String jibunAddress, String detailAddress, String reference) {
+    public Address(User user, String zonecode, String roadAddress, String jibunAddress, String detailAddress, String reference) {
         this.user = user;
-        this.postCode = postCode;
+        this.zonecode = zonecode;
         this.roadAddress = roadAddress;
         this.jibunAddress = jibunAddress;
         this.detailAddress = detailAddress;
@@ -49,8 +49,8 @@ public class Address {
     }
 
     // ✅ 주소 업데이트 메서드
-    public void updateAddress(String postCode, String roadAddress, String jibunAddress, String detailAddress, String reference) {
-        this.postCode = postCode;
+    public void updateAddress(String zonecode, String roadAddress, String jibunAddress, String detailAddress, String reference) {
+        this.zonecode = zonecode;
         this.roadAddress = roadAddress;
         this.jibunAddress = jibunAddress;
         this.detailAddress = detailAddress;

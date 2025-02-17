@@ -33,7 +33,7 @@ public class AddressService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        Address address = new Address(user, addressDto.getPostCode(), addressDto.getRoadAddress(),
+        Address address = new Address(user, addressDto.getZonecode(), addressDto.getRoadAddress(),
                 addressDto.getJibunAddress(), addressDto.getDetailAddress(), addressDto.getReference());
 
         addressRepository.save(address);
@@ -52,7 +52,7 @@ public class AddressService {
         }
 
         // ✅ 주소 정보 업데이트
-        address.setPostCode(addressDto.getPostCode());
+        address.setZonecode(addressDto.getZonecode());
         address.setRoadAddress(addressDto.getRoadAddress());
         address.setJibunAddress(addressDto.getJibunAddress());
         address.setDetailAddress(addressDto.getDetailAddress());
