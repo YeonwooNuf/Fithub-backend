@@ -4,13 +4,13 @@ import com.example.musinsabackend.dto.BrandDto;
 import com.example.musinsabackend.model.Brand;
 import com.example.musinsabackend.repository.BrandRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,14 +19,16 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
 
-    // ✅ Docker에서도 동작하도록 절대 경로 설정
+    @Value("${app.base-url}")
+    private String baseUrl;
+
     private static final String UPLOAD_DIR = "/app/uploads/brand-logos/";
 
     // ✅ 모든 브랜드 조회
     public List<BrandDto> getAllBrands() {
         return brandRepository.findAll()
                 .stream()
-                .map(BrandDto::fromEntity)
+                .map(this::convertToBrandDto)
                 .collect(Collectors.toList());
     }
 
@@ -34,24 +36,24 @@ public class BrandService {
     public List<BrandDto> searchBrandByName(String query) {
         return brandRepository.findByNameOrSubNameIgnoreCase(query, query)
                 .stream()
-                .map(BrandDto::fromEntity)
+                .map(this::convertToBrandDto)
                 .collect(Collectors.toList());
     }
 
     // ✅ 브랜드 추가 (파일 업로드 포함)
     public BrandDto createBrand(String name, String subName, MultipartFile logoFile) {
-        String logoUrl = saveFile(logoFile);
+        String fileName = saveFile(logoFile); // ✅ 원본 파일명 저장
 
         Brand brand = new Brand();
         brand.setName(name);
         brand.setSubName(subName);
-        brand.setLogoUrl(logoUrl);
+        brand.setLogoUrl(fileName); // ✅ DB에는 파일명만 저장
 
         brandRepository.save(brand);
-        return BrandDto.fromEntity(brand);
+        return convertToBrandDto(brand);
     }
 
-    // ✅ 브랜드 수정
+    // ✅ 브랜드 수정 (파일 업로드 포함)
     public BrandDto updateBrand(Long id, String name, String subName, MultipartFile logoFile) {
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 브랜드가 존재하지 않습니다."));
@@ -59,11 +61,12 @@ public class BrandService {
         brand.setName(name);
         brand.setSubName(subName);
         if (logoFile != null && !logoFile.isEmpty()) {
-            brand.setLogoUrl(saveFile(logoFile));
+            deleteFile(brand.getLogoUrl()); // ✅ 기존 파일 삭제
+            brand.setLogoUrl(saveFile(logoFile)); // ✅ 새 파일 저장 후 파일명만 저장
         }
 
         brandRepository.save(brand);
-        return BrandDto.fromEntity(brand);
+        return convertToBrandDto(brand);
     }
 
     // ✅ 브랜드 삭제 (로고 파일도 삭제)
@@ -75,7 +78,7 @@ public class BrandService {
         brandRepository.deleteById(id);
     }
 
-    // ✅ 파일 저장 메소드
+    // ✅ 파일 저장 (중복 방지)
     private String saveFile(MultipartFile file) {
         try {
             Path uploadPath = Paths.get(UPLOAD_DIR);
@@ -83,28 +86,46 @@ public class BrandService {
                 Files.createDirectories(uploadPath);
             }
 
-            // ✅ 파일 이름 중복 방지 (UUID 추가)
             String originalFileName = file.getOriginalFilename();
-            String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
-            Path filePath = uploadPath.resolve(uniqueFileName);
+            Path filePath = uploadPath.resolve(originalFileName);
+
+            // ✅ 같은 이름의 파일이 존재하면 파일명 뒤에 (1), (2) 붙이기
+            int count = 1;
+            while (Files.exists(filePath)) {
+                String fileNameWithoutExt = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+                String extension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+                String newFileName = fileNameWithoutExt + "(" + count + ")" + extension;
+                filePath = uploadPath.resolve(newFileName);
+                count++;
+            }
 
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            return "/uploads/brand-logos/" + uniqueFileName;
+            return filePath.getFileName().toString(); // ✅ DB에는 파일명만 저장
         } catch (IOException e) {
             throw new RuntimeException("파일 저장 중 오류 발생: " + e.getMessage());
         }
     }
 
-    // ✅ 파일 삭제 메소드
-    private void deleteFile(String logoUrl) {
-        try {
-            Path filePath = Paths.get(System.getProperty("user.dir") + logoUrl);
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
+    // ✅ 파일 삭제
+    private void deleteFile(String fileName) {
+        if (fileName != null && !fileName.isEmpty()) {
+            try {
+                Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                System.err.println("❌ 파일 삭제 실패: " + e.getMessage());
             }
-        } catch (IOException e) {
-            System.out.println("❌ 파일 삭제 중 오류 발생: " + e.getMessage());
         }
+    }
+
+    // ✅ API 응답을 위한 변환 (baseUrl 추가)
+    private BrandDto convertToBrandDto(Brand brand) {
+        return new BrandDto(
+                brand.getId(),
+                brand.getName(),
+                brand.getSubName(),
+                brand.getLogoUrl() != null ? baseUrl + "/uploads/brand-logos/" + brand.getLogoUrl() : null
+        );
     }
 }
