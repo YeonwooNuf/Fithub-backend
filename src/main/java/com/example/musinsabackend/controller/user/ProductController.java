@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +39,14 @@ public class ProductController {
         return null;
     }
 
-    // ✅ 1. 전체 상품 목록 조회 (이미지 및 좋아요 여부 포함)
+    // ✅ 1. 전체 상품 목록 조회 (이미지, 좋아요 여부, 브랜드 로고 포함)
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllProducts(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        final Long currentUserId;   
+        final Long currentUserId;
 
         // ✅ JWT 토큰에서 userId 추출
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
@@ -72,12 +71,14 @@ public class ProductController {
             productMap.put("price", productDto.getPrice());
             productMap.put("likeCount", productDto.getLikeCount());
             productMap.put("images", productDto.getImages());
+            productMap.put("brandName", productDto.getBrandName()); // ✅ 브랜드명 추가
+            productMap.put("brandLogoUrl", productDto.getBrandLogoUrl()); // ✅ 브랜드 로고 추가
 
             // ✅ 로그인한 사용자가 해당 상품을 좋아요 했는지 확인
             boolean likedByCurrentUser = currentUserId != null &&
                     likeRepository.existsByUser_UserIdAndProduct_Id(currentUserId, productDto.getId());
 
-            productMap.put("likedByCurrentUser", likedByCurrentUser); // ✅ 추가
+            productMap.put("likedByCurrentUser", likedByCurrentUser);
 
             return productMap;
         }).collect(Collectors.toList());
@@ -91,14 +92,14 @@ public class ProductController {
     }
 
 
-    // ✅ 2. 상품 상세 조회 (이미지 및 좋아요 여부 포함)
+    // ✅ 2. 상품 상세 조회 (이미지, 좋아요 여부, 브랜드 로고 포함)
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
         ProductDto productDto = productService.getProductById(id);
         return ResponseEntity.ok(productDto);
     }
 
-    // ✅ 3. 키워드 검색 (이미지 및 좋아요 여부 포함)
+    // ✅ 3. 키워드 검색 (이미지, 좋아요 여부, 브랜드 로고 포함)
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> searchProducts(
             @RequestParam String keyword,

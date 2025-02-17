@@ -6,6 +6,7 @@ import com.example.musinsabackend.model.ProductCategory;
 import com.example.musinsabackend.model.User;
 import com.example.musinsabackend.repository.user.LikeRepository;
 import com.example.musinsabackend.repository.user.ProductRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,9 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final LikeRepository likeRepository;
+
+    @Value("${app.base-url}") // ✅ BASE_URL을 application.properties에서 설정
+    private String baseUrl;
 
     public ProductService(ProductRepository productRepository, LikeRepository likeRepository) {
         this.productRepository = productRepository;
@@ -82,7 +86,7 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    // 좋아요 상태 설정 후 DTO 변환
+    // ✅ 좋아요 상태 설정 후 DTO 변환 (브랜드 로고 추가)
     private ProductDto mapToProductDtoWithLikeStatus(Product product, Long userId) {
         boolean liked = false;
 
@@ -90,10 +94,33 @@ public class ProductService {
         if (userId != null) {
             liked = likeRepository.existsByUser_UserIdAndProduct_Id(userId, product.getId());
         }
-        // ProductDto 생성 시 liked 상태 전달
-        ProductDto productDto = ProductDto.fromEntity(product);
-        productDto.setLikedByCurrentUser(liked);
 
-        return productDto;
+        // ✅ 브랜드 정보 포함
+        String brandName = (product.getBrand() != null) ? product.getBrand().getName() : "";
+        String brandSubName = (product.getBrand() != null) ? product.getBrand().getSubName() : "";
+        String brandLogoUrl = (product.getBrand() != null && product.getBrand().getLogoUrl() != null)
+                ? baseUrl + "/uploads/brand-logos/" + product.getBrand().getLogoUrl()
+                : null;
+
+        // ✅ 상품 이미지 URL 절대경로 변환
+        List<String> imageUrls = product.getImages().stream()
+                .map(image -> baseUrl + image)
+                .collect(Collectors.toList());
+
+        return new ProductDto(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getDescription(),
+                imageUrls,
+                product.getSizes(),
+                product.getColors(),
+                brandName,
+                brandSubName,
+                brandLogoUrl,
+                product.getCategory(),
+                product.getLikeCount(),
+                liked
+        );
     }
 }

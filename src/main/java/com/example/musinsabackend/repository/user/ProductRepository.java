@@ -24,8 +24,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ✅ 카테고리로 상품 검색
     Page<Product> findByCategory(ProductCategory category, Pageable pageable);
 
-    // 상품 상세 조회 (이미지 포함)
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.images WHERE p.id = :id")
+    // ✅ 상품 상세 조회 (브랜드 정보 포함)
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.brand WHERE p.id = :id")
     Optional<Product> findByIdWithImages(@Param("id") Long id);
 
     // ✅ 좋아요 수 기준으로 상위 10개 상품 조회

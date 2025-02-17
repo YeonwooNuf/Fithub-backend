@@ -79,7 +79,7 @@ public class AdminProductController {
                 null, name, price, description, null,
                 sizes != null ? sizes : List.of(""),   // ✅ NULL 방지
                 colors != null ? colors : List.of(""), // ✅ NULL 방지
-                null, null, category, 0, false          // ✅ 좋아요 상태 기본값 false
+                null, null,null, category, 0, false          // ✅ 좋아요 상태 기본값 false
         );
 
         return ResponseEntity.ok(productService.addProduct(productDto, brandId, images));
@@ -106,7 +106,7 @@ public class AdminProductController {
                 id, name, price, description, null,
                 sizes != null ? sizes : List.of(""),   // ✅ NULL 방지
                 colors != null ? colors : List.of(""), // ✅ NULL 방지
-                null, null, category, 0, false          // ✅ 좋아요 상태 기본값 false
+                null, null, null, category, 0, false          // ✅ 좋아요 상태 기본값 false
         );
 
         return ResponseEntity.ok(productService.updateProduct(id, productDto, images));

@@ -7,6 +7,7 @@ import com.example.musinsabackend.repository.BrandRepository;
 import com.example.musinsabackend.repository.admin.AdminProductRepository;
 import com.example.musinsabackend.repository.user.LikeRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,10 @@ public class AdminProductService {
 
     private final AdminProductRepository productRepository;
     private final BrandRepository brandRepository;
-    private final LikeRepository likeRepository; // ✅ 좋아요 데이터 관리 (Optional)
+    private final LikeRepository likeRepository;
+
+    @Value("${app.base-url}") // ✅ 환경 설정에서 기본 URL 가져오기
+    private String baseUrl;
 
     private static final String UPLOAD_DIR = "/app/uploads/cloth-images/";
 
@@ -32,27 +36,35 @@ public class AdminProductService {
         this.likeRepository = likeRepository;
     }
 
+    // ✅ 전체 상품 목록 조회 (페이징)
     public Page<ProductDto> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable).map(ProductDto::fromEntity);
+        return productRepository.findAll(pageable)
+                .map(this::convertToProductDto);
     }
 
+    // ✅ 상품 상세 조회
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다."));
-        return ProductDto.fromEntity(product);
+        return convertToProductDto(product);
     }
 
+    // ✅ 키워드로 상품 검색 (페이징)
     public Page<ProductDto> searchProducts(String keyword, Pageable pageable) {
         return productRepository.findByNameContainingIgnoreCase(keyword, pageable)
-                .map(ProductDto::fromEntity);
+                .map(this::convertToProductDto);
     }
 
+    // ✅ 브랜드별 상품 조회 (페이징)
     public Page<ProductDto> getProductsByBrand(Long brandId, Pageable pageable) {
         Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 브랜드가 존재하지 않습니다."));
-        return productRepository.findByBrand(brand, pageable).map(ProductDto::fromEntity);
+        return productRepository.findByBrand(brand, pageable)
+                .map(this::convertToProductDto);
     }
 
+    // ✅ 상품 추가
+    @Transactional
     public ProductDto addProduct(ProductDto productDto, Long brandId, List<MultipartFile> imageFiles) {
         validateImages(imageFiles);
 
@@ -72,9 +84,11 @@ public class AdminProductService {
         product.setBrand(brand);
 
         productRepository.save(product);
-        return ProductDto.fromEntity(product);
+        return convertToProductDto(product);
     }
 
+    // ✅ 상품 수정
+    @Transactional
     public ProductDto updateProduct(Long id, ProductDto productDto, List<MultipartFile> imageFiles) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다."));
@@ -94,9 +108,10 @@ public class AdminProductService {
         existingProduct.setCategory(productDto.getCategory());
 
         productRepository.save(existingProduct);
-        return ProductDto.fromEntity(existingProduct);
+        return convertToProductDto(existingProduct);
     }
 
+    // ✅ 상품 삭제
     @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
@@ -109,6 +124,28 @@ public class AdminProductService {
         productRepository.delete(product);
     }
 
+    // ✅ DTO 변환 메서드
+    private ProductDto convertToProductDto(Product product) {
+        return new ProductDto(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getDescription(),
+                product.getImages().stream().map(image -> baseUrl + image).collect(Collectors.toList()),
+                product.getSizes(),
+                product.getColors(),
+                product.getBrand() != null ? product.getBrand().getName() : "",
+                product.getBrand() != null && product.getBrand().getLogoUrl() != null
+                        ? baseUrl + "/uploads/brand-logos/" + product.getBrand().getLogoUrl()
+                        : null,
+                product.getBrand() != null ? product.getBrand().getSubName() : "",
+                product.getCategory(),
+                product.getLikeCount(),
+                false // ✅ 관리자는 좋아요 여부 필요 없음
+        );
+    }
+
+    // ✅ 이미지 파일 저장
     private List<String> saveFiles(List<MultipartFile> files) {
         try {
             Path uploadPath = Paths.get(UPLOAD_DIR);
@@ -136,6 +173,7 @@ public class AdminProductService {
         }
     }
 
+    // ✅ 이미지 파일 삭제
     private void deleteFiles(List<String> imageUrls) {
         if (imageUrls != null && !imageUrls.isEmpty()) {
             imageUrls.forEach(imageUrl -> {
@@ -149,12 +187,14 @@ public class AdminProductService {
         }
     }
 
+    // ✅ 이미지 유효성 검사
     private void validateImages(List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
             throw new IllegalArgumentException("상품 이미지는 필수입니다.");
         }
     }
 
+    // ✅ 지원하는 파일 확장자 확인
     private void validateFileExtension(String fileName) {
         String lowerCaseFileName = fileName.toLowerCase();
         if (!(lowerCaseFileName.endsWith(".jpg") ||
