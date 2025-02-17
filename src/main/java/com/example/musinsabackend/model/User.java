@@ -28,7 +28,7 @@ public class User {
     private Role role = Role.USER; // ✅ 기본값을 USER로 설정
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserCoupon> userCoupons;  // ✅ 수정된 부분
+    private List<UserCoupon> userCoupons;  // ✅ 쿠폰 관계
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Point> points; // 적립금 관계
@@ -42,6 +42,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Asking> askings; // 문의 내역 관계
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses; // ✅ 사용자 주소 관계 추가
+
     // Getter와 Setter
 
     public Long getUserId() {
@@ -54,7 +57,6 @@ public class User {
     public Role getRole() {
         return role;
     }
-
     public void setRole(Role role) {
         this.role = role;
     }
@@ -62,7 +64,6 @@ public class User {
     public String getUsername() {
         return username;
     }
-
     public void setUsername(String username) {
         this.username = username;
     }
@@ -70,7 +71,6 @@ public class User {
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -78,7 +78,6 @@ public class User {
     public String getNickname() {
         return nickname;
     }
-
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
@@ -86,7 +85,6 @@ public class User {
     public String getBirthdate() {
         return birthdate;
     }
-
     public void setBirthdate(String birthdate) {
         this.birthdate = birthdate;
     }
@@ -94,7 +92,6 @@ public class User {
     public String getPhone() {
         return phone;
     }
-
     public void setPhone(String phone) {
         this.phone = phone;
     }
@@ -102,7 +99,6 @@ public class User {
     public String getGender() {
         return gender;
     }
-
     public void setGender(String gender) {
         this.gender = gender;
     }
@@ -110,7 +106,6 @@ public class User {
     public String getProfileImageUrl() {
         return profileImageUrl;
     }
-
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
@@ -118,7 +113,6 @@ public class User {
     public List<UserCoupon> getUserCoupons() {
         return userCoupons;
     }
-
     public void setUserCoupons(List<UserCoupon> userCoupons) {
         this.userCoupons = userCoupons;
     }
@@ -126,7 +120,6 @@ public class User {
     public List<Point> getPoints() {
         return points;
     }
-
     public void setPoints(List<Point> points) {
         this.points = points;
     }
@@ -134,7 +127,6 @@ public class User {
     public List<Order> getOrders() {
         return orders;
     }
-
     public void setOrders(List<Order> orders) {
         this.orders = orders;
     }
@@ -142,7 +134,6 @@ public class User {
     public List<Review> getReviews() {
         return reviews;
     }
-
     public void setReviews(List<Review> reviews) {
         this.reviews = reviews;
     }
@@ -150,8 +141,14 @@ public class User {
     public List<Asking> getAskings() {
         return askings;
     }
-
     public void setAskings(List<Asking> askings) {
         this.askings = askings;
+    }
+
+    public List<Address> getAddresses() { // ✅ 주소 Getter 추가
+        return addresses;
+    }
+    public void setAddresses(List<Address> addresses) { // ✅ 주소 Setter 추가
+        this.addresses = addresses;
     }
 }

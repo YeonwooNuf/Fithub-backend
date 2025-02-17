@@ -74,7 +74,7 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        UserDto userDto = new UserDto();
+        UserDto userDto = new UserDto(user);
         userDto.setUserId(user.getUserId()); // ✅ 추가
         userDto.setUsername(user.getUsername());
         userDto.setNickname(user.getNickname());
@@ -115,33 +115,21 @@ public class UserService {
     // 전체 사용자 조회 (페이지네이션) - username, nickname, birthdate, phone, gender 포함
     public Page<UserDto> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findAll(pageable).map(user -> new UserDto(
-                user.getUserId(),
-                user.getUsername(),
-                user.getNickname(),
-                user.getBirthdate(),
-                user.getPhone(),
-                user.getGender(),
-                user.getRole()
-        ));
+        return userRepository.findAll(pageable).map(UserDto::new);
     }
 
     // ✅ 특정 사용자 검색 (닉네임 또는 이메일 기반)
     public UserDto searchUser(String query) {
         Optional<User> userOpt = userRepository.findByUsername(query);
+
         if (userOpt.isEmpty()) {
             userOpt = userRepository.findByNickname(query);
         }
+
         User user = userOpt.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        return new UserDto(
-                user.getUserId(),
-                user.getUsername(),
-                user.getNickname(),
-                user.getBirthdate(),
-                user.getPhone(),
-                user.getGender(),
-                user.getRole()
-        );
+
+        // ✅ 수정된 부분: UserDto 생성 시, user 객체를 넘겨줌
+        return new UserDto(user);
     }
 
     @Transactional

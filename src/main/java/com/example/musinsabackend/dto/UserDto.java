@@ -1,159 +1,48 @@
 package com.example.musinsabackend.dto;
 
 import com.example.musinsabackend.model.Role;
-
+import com.example.musinsabackend.model.User;
 import java.util.List;
+import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class UserDto {
     private Long userId;
-    private String username;
     private String password;
-
+    private String username;
     private String nickname;
     private String birthdate;
     private String phone;
     private String gender;
-    private String profileImageUrl; // 프로필 사진 URL
+    private String profileImageUrl;
+    private Role role;
+    private List<AddressDto> addresses; // ✅ 사용자 주소 목록 추가
 
-    private Role role; // 사용자 역할 지정
+    private List<OrderDto> orders;
+    private List<ReviewDto> reviews;
+    private List<AskingDto> askings;
+    private List<CommunityPostDto> communityPosts;
+    private List<CouponDto> coupons;
+    private List<PointDto> points;
 
-// 참조 관계를 위한 필드
-    private List<OrderDto> orders; // 주문 내역
+    // ✅ User 엔티티 → UserDto 변환하는 생성자 추가
+    public UserDto(User user) {
+        this.userId = user.getUserId();
+        this.password = user.getPassword();
+        this.username = user.getUsername();
+        this.nickname = user.getNickname();
+        this.birthdate = user.getBirthdate();
+        this.phone = user.getPhone();
+        this.gender = user.getGender();
+        this.profileImageUrl = user.getProfileImageUrl();
+        this.role = user.getRole();
 
-    private List<ReviewDto> reviews; // 리뷰
-    private List<AskingDto> askings; // 1:1 문의 내역
-    private List<CommunityPostDto> communityPosts; // 커뮤니티 게시글
-    private List<CouponDto> coupons; // 쿠폰 내역
-    private List<PointDto> points; // 포인트 내역
-
-    public UserDto(Long userId, String username, String nickname, String birthdate, String phone, String gender, Role role) {
-        this.userId = userId;
-        this.username = username;
-        this.nickname = nickname;
-        this.birthdate = birthdate;
-        this.phone = phone;
-        this.gender = gender;
-        this.role = role;
-    }
-
-    // 기본 생성자
-    public UserDto() {
-    }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public String getBirthdate() {
-        return birthdate;
-    }
-
-    public void setBirthdate(String birthdate) {
-        this.birthdate = birthdate;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getProfileImageUrl() {
-        return profileImageUrl;
-    }
-
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    public List<OrderDto> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(List<OrderDto> orders) {
-        this.orders = orders;
-    }
-
-    public List<ReviewDto> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(List<ReviewDto> reviews) {
-        this.reviews = reviews;
-    }
-
-    public List<AskingDto> getAskings() {
-        return askings;
-    }
-
-    public void setAskings(List<AskingDto> askings) {
-        this.askings = askings;
-    }
-
-    public List<CommunityPostDto> getCommunityPosts() {
-        return communityPosts;
-    }
-
-    public void setCommunityPosts(List<CommunityPostDto> communityPosts) {
-        this.communityPosts = communityPosts;
-    }
-
-    public List<CouponDto> getCoupons() {
-        return coupons;
-    }
-
-    public void setCoupons(List<CouponDto> coupons) {
-        this.coupons = coupons;
-    }
-
-    public List<PointDto> getPoints() {
-        return points;
-    }
-
-    public void setPoints(List<PointDto> points) {
-        this.points = points;
+        // ✅ User 엔티티의 List<Address> → List<AddressDto> 변환
+        this.addresses = user.getAddresses().stream()
+                .map(AddressDto::new) // Address 엔티티를 AddressDto로 변환
+                .collect(Collectors.toList());
     }
 }
