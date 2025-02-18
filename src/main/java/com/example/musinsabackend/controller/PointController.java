@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/points")
-@CrossOrigin(origins = "http://localhost:3000")
+// 포인트도 UserService에서 사용자 조회 시 받아오도록 표시해야 함.
 public class PointController {
 
     @Autowired
