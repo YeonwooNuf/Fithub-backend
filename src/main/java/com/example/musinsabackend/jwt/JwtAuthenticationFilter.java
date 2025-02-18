@@ -32,8 +32,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestUri = request.getRequestURI();
+
+        // 특정 URL에 대해서는 필터를 건너뜀
+        if (requestUri.startsWith("/api/products")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
-        log.info("🔍 요청 URL: {}", request.getRequestURI());
+        log.info("🔍 요청 URL: {}", requestUri);
         log.info("🟡 Authorization 헤더 값: {}", authHeader);
 
         String token = resolveToken(request);
@@ -41,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
-            String role = jwtTokenProvider.extractClaims(token).get("role", String.class); // ✅ 역할 정보 추출
+            String role = jwtTokenProvider.extractClaims(token).get("role", String.class);
 
             log.info("✅ 인증된 사용자: {}", username);
             log.info("✅ 사용자 역할: {}", role);
@@ -53,12 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            Collections.singletonList(new SimpleGrantedAuthority(role)) // ✅ 권한 추가
+                            Collections.singletonList(new SimpleGrantedAuthority(role))
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } else {
-            log.warn("❌ 유효하지 않은 토큰 또는 토큰 없음 (URL: {})", request.getRequestURI());
+            log.warn("❌ 유효하지 않은 토큰 또는 토큰 없음 (URL: {})", requestUri);
         }
 
         filterChain.doFilter(request, response);

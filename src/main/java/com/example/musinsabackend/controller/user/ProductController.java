@@ -10,9 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,16 +44,13 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
+        // ✅ currentUserId를 effectively final 변수로 변경
         final Long currentUserId;
 
-        // ✅ JWT 토큰에서 userId 추출
+        // ✅ JWT 토큰이 있는 경우에만 검증
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7);
-            if (jwtTokenProvider.validateToken(token)) {
-                currentUserId = jwtTokenProvider.getUserIdFromToken(token);
-            } else {
-                currentUserId = null;
-            }
+            currentUserId = jwtTokenProvider.validateToken(token) ? jwtTokenProvider.getUserIdFromToken(token) : null;
         } else {
             currentUserId = null;
         }
@@ -64,24 +59,25 @@ public class ProductController {
         Page<ProductDto> productPage = productService.getAllProducts(PageRequest.of(page, size));
 
         // ✅ 각 상품에 likedByCurrentUser 추가
-        List<Map<String, Object>> updatedProducts = productPage.getContent().stream().map(productDto -> {
-            Map<String, Object> productMap = new HashMap<>();
-            productMap.put("id", productDto.getId());
-            productMap.put("name", productDto.getName());
-            productMap.put("price", productDto.getPrice());
-            productMap.put("likeCount", productDto.getLikeCount());
-            productMap.put("images", productDto.getImages());
-            productMap.put("brandName", productDto.getBrandName()); // ✅ 브랜드명 추가
-            productMap.put("brandLogoUrl", productDto.getBrandLogoUrl()); // ✅ 브랜드 로고 추가
+        List<Map<String, Object>> updatedProducts = productPage.getContent().stream()
+                .map(productDto -> {
+                    Map<String, Object> productMap = new HashMap<>();
+                    productMap.put("id", productDto.getId());
+                    productMap.put("name", productDto.getName());
+                    productMap.put("price", productDto.getPrice());
+                    productMap.put("likeCount", productDto.getLikeCount());
+                    productMap.put("images", productDto.getImages());
+                    productMap.put("brandName", productDto.getBrandName());
+                    productMap.put("brandLogoUrl", productDto.getBrandLogoUrl());
 
-            // ✅ 로그인한 사용자가 해당 상품을 좋아요 했는지 확인
-            boolean likedByCurrentUser = currentUserId != null &&
-                    likeRepository.existsByUser_UserIdAndProduct_Id(currentUserId, productDto.getId());
+                    // ✅ 로그인한 경우에만 좋아요 여부 확인
+                    boolean likedByCurrentUser = currentUserId != null &&
+                            likeRepository.existsByUser_UserIdAndProduct_Id(currentUserId, productDto.getId());
 
-            productMap.put("likedByCurrentUser", likedByCurrentUser);
-
-            return productMap;
-        }).collect(Collectors.toList());
+                    productMap.put("likedByCurrentUser", likedByCurrentUser);
+                    return productMap;
+                })
+                .collect(Collectors.toList());
 
         // ✅ 최종 반환
         return ResponseEntity.ok(Map.of(
@@ -90,7 +86,6 @@ public class ProductController {
                 "totalPages", productPage.getTotalPages()
         ));
     }
-
 
     // ✅ 2. 상품 상세 조회 (이미지, 좋아요 여부, 브랜드 로고 포함)
     @GetMapping("/{id}")

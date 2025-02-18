@@ -50,8 +50,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/register", "/api/users/home").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/register").permitAll() // ✅ 인증 없이 허용
+                        .requestMatchers(HttpMethod.GET, "/uploads/**","/api/users/home","/api/products").permitAll()
                         .requestMatchers("/api/users/mypage").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
                         .anyRequest().authenticated()
@@ -77,8 +77,8 @@ public class SecurityConfig {
                         })
                 );
 
+        // ✅ 필터 적용 순서 조정
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         logger.info("✅ Security Filter Chain Initialized");
 
