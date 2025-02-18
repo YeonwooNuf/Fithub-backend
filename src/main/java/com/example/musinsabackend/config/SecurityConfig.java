@@ -56,14 +56,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/likes/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.addAllowedOriginPattern("*");
-                    corsConfig.addAllowedMethod("*");
-                    corsConfig.addAllowedHeader("*");
-                    corsConfig.setAllowCredentials(true);
-                    return corsConfig;
-                }))
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .exceptionHandling(exception -> exception
