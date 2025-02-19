@@ -21,8 +21,6 @@ public class Point {
     @Enumerated(EnumType.STRING)
     private PointStatus status; // 포인트 상태 (ACTIVE, USED, EXPIRED)
 
-    private String type; // 포인트 유형 (EARN, USE, EXPIRE)
-
     @Enumerated(EnumType.STRING)
     private PointReason reason; // ✅ ENUM 적용
 
@@ -72,14 +70,6 @@ public class Point {
 
     public void setReason(PointReason reason) {
         this.reason = reason;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public LocalDateTime getCreatedAt() {

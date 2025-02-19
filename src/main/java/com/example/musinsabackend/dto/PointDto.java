@@ -8,19 +8,17 @@ public class PointDto {
     private Long userId;
     private int amount;
     private PointStatus status;
-    private String type;
     private String reason;
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
     private Long orderId;
 
-    public PointDto(Long id, Long userId, int amount, PointStatus status, String type, String reason,
+    public PointDto(Long id, Long userId, int amount, PointStatus status, String reason,
                     LocalDateTime createdAt, LocalDateTime expiredAt, Long orderId) {
         this.id = id;
         this.userId = userId;
         this.amount = amount;
         this.status = status;
-        this.type = type;
         this.reason = reason;
         this.createdAt = createdAt;
         this.expiredAt = expiredAt;
@@ -41,10 +39,6 @@ public class PointDto {
 
     public PointStatus getStatus() {
         return status;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public String getReason() {

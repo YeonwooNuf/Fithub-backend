@@ -103,7 +103,6 @@ public class UserService {
                         user.getUserId(),
                         point.getAmount(),
                         point.getStatus(),
-                        point.getType(),
                         point.getReason().name(),   // ENUM -> String 변환
                         point.getCreatedAt(),
                         point.getExpiredAt(),
