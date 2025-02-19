@@ -33,14 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String requestUri = request.getRequestURI();
-
-        // 특정 URL에 대해서는 필터를 건너뜀
-        if (requestUri.startsWith("/api/products")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String authHeader = request.getHeader("Authorization");
+
         log.info("🔍 요청 URL: {}", requestUri);
         log.info("🟡 Authorization 헤더 값: {}", authHeader);
 
@@ -49,13 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);  // ✅ userId 추가
             String role = jwtTokenProvider.extractClaims(token).get("role", String.class);
 
             log.info("✅ 인증된 사용자: {}", username);
             log.info("✅ 사용자 역할: {}", role);
+            log.info("✅ 사용자 ID: {}", userId);  // ✅ userId 로그 추가
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            log.info("✅ 사용자 권한: {}", userDetails.getAuthorities());
 
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
@@ -65,6 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            // ✅ Request 객체에 userId를 Attribute로 저장
+            request.setAttribute("userId", userId);
         } else {
             log.warn("❌ 유효하지 않은 토큰 또는 토큰 없음 (URL: {})", requestUri);
         }
