@@ -1,10 +1,13 @@
 package com.example.musinsabackend.service;
 
 import com.example.musinsabackend.dto.CouponDto;
-import com.example.musinsabackend.model.*;
-import com.example.musinsabackend.repository.CouponRepository;
+import com.example.musinsabackend.model.coupon.Coupon;
+import com.example.musinsabackend.model.coupon.CouponDistributionType;
+import com.example.musinsabackend.model.coupon.UserCoupon;
+import com.example.musinsabackend.model.user.User;
+import com.example.musinsabackend.repository.admin.AdminCouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
-import com.example.musinsabackend.repository.UserCouponRepository;
+import com.example.musinsabackend.repository.user.CouponRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,20 +21,20 @@ import java.util.stream.Collectors;
 public class CouponService {
 
     @Autowired
-    private CouponRepository couponRepository;
+    private AdminCouponRepository adminCouponRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private UserCouponRepository userCouponRepository;
+    private CouponRepository couponRepository;
 
     // ✅ 사용자 보유 쿠폰 목록 조회 (만료된 쿠폰 필터링 후 반환)
     public List<CouponDto> getUserCoupons(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
 
-        List<UserCoupon> userCoupons = userCouponRepository.findUserCouponsByUser(user);
+        List<UserCoupon> userCoupons = couponRepository.findUserCouponsByUser(user);
 
 //        // 만료된 쿠폰 삭제
 //        userCoupons.removeIf(userCoupon -> {
@@ -50,7 +53,7 @@ public class CouponService {
 
     // ✅ 마이페이지에서 현재 보유 쿠폰 개수 조회
     public int getCouponCount(Long userId) {
-        return userCouponRepository.countCouponsByUserId(userId);
+        return couponRepository.countCouponsByUserId(userId);
     }
 
     // ✅ 쿠폰 등록 (자동 지급, 수동 등록)
@@ -73,7 +76,7 @@ public class CouponService {
             coupon.setCouponCode(couponDto.getCouponCode().toUpperCase());
         }
 
-        couponRepository.save(coupon);
+        adminCouponRepository.save(coupon);
 
         // 자동 지급 쿠폰인 경우 모든 사용자에게 발급
         if (couponDto.getDistributionType() == CouponDistributionType.AUTO) {
@@ -86,7 +89,7 @@ public class CouponService {
                 userCoupon.setExpiryDate(coupon.getExpiryDate());
                 userCoupon.setUsed(false);
 
-                userCouponRepository.save(userCoupon);
+                couponRepository.save(userCoupon);
             }
         }
         log.info("✅ 쿠폰 등록 완료: 쿠폰 이름 = {}", coupon.getName());
@@ -94,7 +97,7 @@ public class CouponService {
 
     // ✅ 쿠폰 수정 (사용자 보유 쿠폰에도 반영)
     public void updateCoupon(Long couponId, CouponDto updatedCouponDto) {
-        Coupon coupon = couponRepository.findById(couponId)
+        Coupon coupon = adminCouponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쿠폰을 찾을 수 없습니다."));
 
         coupon.setName(updatedCouponDto.getName());
@@ -104,33 +107,33 @@ public class CouponService {
         coupon.setExpiryDate(updatedCouponDto.getExpiryDate());
         coupon.setTarget(updatedCouponDto.getTarget());
         coupon.setTargetValue(updatedCouponDto.getTargetValue());
-        couponRepository.save(coupon);
+        adminCouponRepository.save(coupon);
 
         // ✅ 사용자 보유 쿠폰 정보 동기화 (CouponRepository 사용)
-        List<UserCoupon> userCoupons = couponRepository.findUserCouponsByCoupon(coupon);
+        List<UserCoupon> userCoupons = adminCouponRepository.findUserCouponsByCoupon(coupon);
         for (UserCoupon userCoupon : userCoupons) {
             userCoupon.setExpiryDate(updatedCouponDto.getExpiryDate());
-            userCouponRepository.save(userCoupon);
+            couponRepository.save(userCoupon);
         }
     }
 
     // ✅ 쿠폰 삭제
     public void deleteCoupon(Long couponId) {
-        Coupon coupon = couponRepository.findById(couponId)
+        Coupon coupon = adminCouponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쿠폰을 찾을 수 없습니다."));
 
         // ✅ 사용자 보유 쿠폰 삭제 (CouponRepository 사용)
-        List<UserCoupon> userCoupons = couponRepository.findUserCouponsByCoupon(coupon);
+        List<UserCoupon> userCoupons = adminCouponRepository.findUserCouponsByCoupon(coupon);
         for (UserCoupon userCoupon : userCoupons) {
-            userCouponRepository.delete(userCoupon);
+            couponRepository.delete(userCoupon);
         }
 
-        couponRepository.delete(coupon);
+        adminCouponRepository.delete(coupon);
     }
 
     // ✅ 현재 등록된 쿠폰 목록 조회
     public List<CouponDto> getAllCoupons() {
-        return couponRepository.findAll().stream()
+        return adminCouponRepository.findAll().stream()
                 .map(coupon -> new CouponDto(
                         coupon.getId(),
                         coupon.getName(),
@@ -153,14 +156,14 @@ public class CouponService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
 
-        Coupon coupon = couponRepository.findByCouponCode(couponCode)
+        Coupon coupon = adminCouponRepository.findByCouponCode(couponCode)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰 코드입니다."));
 
         if (coupon.getDistributionType() != CouponDistributionType.MANUAL) {
             throw new IllegalArgumentException("이 쿠폰은 수동 등록이 불가능한 쿠폰입니다.");
         }
 
-        boolean alreadyRegistered = userCouponRepository.existsByUserAndCoupon(user, coupon);
+        boolean alreadyRegistered = couponRepository.existsByUserAndCoupon(user, coupon);
         if (alreadyRegistered) {
             throw new IllegalArgumentException("이미 등록된 쿠폰입니다.");
         }
@@ -176,7 +179,7 @@ public class CouponService {
         userCoupon.setExpiryDate(coupon.getExpiryDate());
         userCoupon.setUsed(false);
 
-        userCouponRepository.save(userCoupon);
+        couponRepository.save(userCoupon);
 
         // ✅ 등록된 쿠폰 정보를 CouponDto로 변환하여 반환
         return convertToDto(userCoupon);
@@ -185,14 +188,14 @@ public class CouponService {
     // ✅ 관리자용: 만료된 쿠폰 조회
     public List<CouponDto> getExpiredCoupons() {
         LocalDate today = LocalDate.now();
-        List<Coupon> expiredCoupons = couponRepository.findByExpiryDateBefore(today);
+        List<Coupon> expiredCoupons = adminCouponRepository.findByExpiryDateBefore(today);
         return expiredCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     // ✅ 관리자용: 유효한 쿠폰 조회
     public List<CouponDto> getValidCoupons() {
         LocalDate today = LocalDate.now();
-        List<Coupon> validCoupons = couponRepository.findByExpiryDateAfterOrExpiryDateEquals(today, today);
+        List<Coupon> validCoupons = adminCouponRepository.findByExpiryDateAfterOrExpiryDateEquals(today, today);
         return validCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

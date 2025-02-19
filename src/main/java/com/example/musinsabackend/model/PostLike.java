@@ -1,5 +1,6 @@
 package com.example.musinsabackend.model;
 
+import com.example.musinsabackend.model.user.User;
 import jakarta.persistence.*;
 
 @Entity

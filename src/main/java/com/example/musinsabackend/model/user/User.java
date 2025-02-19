@@ -1,5 +1,8 @@
-package com.example.musinsabackend.model;
+package com.example.musinsabackend.model.user;
 
+import com.example.musinsabackend.model.*;
+import com.example.musinsabackend.model.coupon.UserCoupon;
+import com.example.musinsabackend.model.point.Point;
 import jakarta.persistence.*;
 import java.util.List;
 

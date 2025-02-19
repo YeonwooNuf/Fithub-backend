@@ -1,6 +1,6 @@
-package com.example.musinsabackend.service;
+package com.example.musinsabackend.service.user;
 
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

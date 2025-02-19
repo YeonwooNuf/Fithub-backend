@@ -1,7 +1,7 @@
 package com.example.musinsabackend.dto;
 
-import com.example.musinsabackend.model.CouponDistributionType;
-import com.example.musinsabackend.model.CouponTarget;
+import com.example.musinsabackend.model.coupon.CouponDistributionType;
+import com.example.musinsabackend.model.coupon.CouponTarget;
 
 import java.time.LocalDate;
 

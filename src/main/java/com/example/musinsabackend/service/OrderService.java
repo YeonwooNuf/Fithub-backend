@@ -4,7 +4,7 @@ import com.example.musinsabackend.dto.OrderDto;
 import com.example.musinsabackend.model.Order;
 import com.example.musinsabackend.model.OrderStatus;
 import com.example.musinsabackend.model.Product;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.OrderRepository;
 import com.example.musinsabackend.repository.admin.AdminProductRepository;
 import com.example.musinsabackend.repository.UserRepository;

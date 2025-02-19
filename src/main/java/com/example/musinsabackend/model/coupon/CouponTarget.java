@@ -1,4 +1,4 @@
-package com.example.musinsabackend.model;
+package com.example.musinsabackend.model.coupon;
 
 public enum CouponTarget {
     ALL_PRODUCTS,  // 전체 상품

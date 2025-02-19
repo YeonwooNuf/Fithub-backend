@@ -1,18 +1,17 @@
-package com.example.musinsabackend.repository;
+package com.example.musinsabackend.repository.user;
 
-import com.example.musinsabackend.model.User;
-import com.example.musinsabackend.model.UserCoupon;
-import com.example.musinsabackend.model.Coupon;
+import com.example.musinsabackend.model.user.User;
+import com.example.musinsabackend.model.coupon.UserCoupon;
+import com.example.musinsabackend.model.coupon.Coupon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
+public interface CouponRepository extends JpaRepository<UserCoupon, Long> {
     // 사용자 기능
 
     // ✅ 특정 사용자의 보유 쿠폰 목록 조회

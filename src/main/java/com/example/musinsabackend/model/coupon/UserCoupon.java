@@ -1,5 +1,6 @@
-package com.example.musinsabackend.model;
+package com.example.musinsabackend.model.coupon;
 
+import com.example.musinsabackend.model.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 

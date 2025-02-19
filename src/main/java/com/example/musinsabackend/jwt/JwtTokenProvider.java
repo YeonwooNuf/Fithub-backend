@@ -1,6 +1,6 @@
 package com.example.musinsabackend.jwt;
 
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

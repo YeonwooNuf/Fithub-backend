@@ -2,7 +2,7 @@ package com.example.musinsabackend.service.user;
 
 import com.example.musinsabackend.dto.AddressDto;
 import com.example.musinsabackend.model.Address;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.user.AddressRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import org.springframework.stereotype.Service;

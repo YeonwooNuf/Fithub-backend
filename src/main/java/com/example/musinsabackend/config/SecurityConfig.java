@@ -2,7 +2,7 @@ package com.example.musinsabackend.config;
 
 import com.example.musinsabackend.jwt.JwtAuthenticationFilter;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
-import com.example.musinsabackend.service.UserDetailsServiceImpl;
+import com.example.musinsabackend.service.user.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

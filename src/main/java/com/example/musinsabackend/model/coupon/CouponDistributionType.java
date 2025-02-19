@@ -1,4 +1,4 @@
-package com.example.musinsabackend.model;
+package com.example.musinsabackend.model.coupon;
 
 public enum CouponDistributionType {
     AUTO,    // 자동 지급

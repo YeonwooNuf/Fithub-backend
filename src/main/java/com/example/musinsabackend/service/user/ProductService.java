@@ -3,7 +3,7 @@ package com.example.musinsabackend.service.user;
 import com.example.musinsabackend.dto.ProductDto;
 import com.example.musinsabackend.model.Product;
 import com.example.musinsabackend.model.ProductCategory;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.user.LikeRepository;
 import com.example.musinsabackend.repository.user.ProductRepository;
 import org.springframework.beans.factory.annotation.Value;

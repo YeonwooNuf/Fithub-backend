@@ -3,7 +3,7 @@ package com.example.musinsabackend.service;
 import com.example.musinsabackend.dto.CommunityPostDto;
 import com.example.musinsabackend.model.CommunityPost;
 import com.example.musinsabackend.model.PostLike;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.CommunityPostRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

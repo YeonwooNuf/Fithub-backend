@@ -3,7 +3,7 @@ package com.example.musinsabackend.service.user;
 import com.example.musinsabackend.dto.CartItemDto;
 import com.example.musinsabackend.model.CartItem;
 import com.example.musinsabackend.model.Product;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.user.CartItemRepository;
 import com.example.musinsabackend.repository.user.ProductRepository;
 import com.example.musinsabackend.repository.UserRepository;
