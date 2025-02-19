@@ -1,32 +1,65 @@
 package com.example.musinsabackend.dto;
 
+import com.example.musinsabackend.model.point.PointStatus;
 import java.time.LocalDateTime;
 
 public class PointDto {
-
     private Long id;
-    private String description;
+    private Long userId;
     private int amount;
-    private LocalDateTime date; // ✅ 변경: String → LocalDateTime
+    private PointStatus status;
+    private String type;
+    private String reason;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiredAt;
+    private Long orderId;
 
-    public PointDto() {}
-
-    public PointDto(Long id, String description, int amount, LocalDateTime date) {
+    public PointDto(Long id, Long userId, int amount, PointStatus status, String type, String reason,
+                    LocalDateTime createdAt, LocalDateTime expiredAt, Long orderId) {
         this.id = id;
-        this.description = description;
+        this.userId = userId;
         this.amount = amount;
-        this.date = date;
+        this.status = status;
+        this.type = type;
+        this.reason = reason;
+        this.createdAt = createdAt;
+        this.expiredAt = expiredAt;
+        this.orderId = orderId;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public Long getUserId() {
+        return userId;
+    }
 
-    public int getAmount() { return amount; }
-    public void setAmount(int amount) { this.amount = amount; }
+    public int getAmount() {
+        return amount;
+    }
 
-    public LocalDateTime getDate() { return date; }
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public PointStatus getStatus() {
+        return status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getExpiredAt() {
+        return expiredAt;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
 }

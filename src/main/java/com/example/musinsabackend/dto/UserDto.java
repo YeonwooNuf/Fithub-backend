@@ -1,7 +1,7 @@
 package com.example.musinsabackend.dto;
 
-import com.example.musinsabackend.model.Role;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.Role;
+import com.example.musinsabackend.model.user.User;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;

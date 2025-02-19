@@ -2,15 +2,12 @@ package com.example.musinsabackend.controller;
 
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 @RestController
@@ -52,7 +49,7 @@ public class UserController {
             String username = requestBody.get("username");
             String password = requestBody.get("password");
 
-            User user = userService.findUserByUsername(username);
+            UserDto user = userService.findUserByUsername(username);
             String token = userService.loginUser(username, password);
             System.out.println("로그인 응답 - 발급된 토큰: " + token);
 
@@ -82,7 +79,7 @@ public class UserController {
         }
         try {
             String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
-            User user = userService.findUserByUsername(username);
+            UserDto user = userService.findUserByUsername(username);
             int couponCount = userService.getUserCouponCount(user.getUserId());
 
             return ResponseEntity.ok(Map.of(
@@ -114,7 +111,7 @@ public class UserController {
         }
         try {
             String username = jwtTokenProvider.getUsernameFromToken(token.substring(7)); // Bearer 제거
-            User user = userService.findUserByUsername(username);
+            UserDto user = userService.findUserByUsername(username);
             String profileImageUrl = "/uploads/profile-images/" + user.getProfileImageUrl();
 
             return ResponseEntity.ok(Map.of(

@@ -1,83 +1,57 @@
 package com.example.musinsabackend.controller;
 
 import com.example.musinsabackend.dto.PointDto;
-import com.example.musinsabackend.jwt.JwtTokenProvider;
+import com.example.musinsabackend.model.point.PointReason;
 import com.example.musinsabackend.service.PointService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/points")
-// 포인트도 UserService에서 사용자 조회 시 받아오도록 표시해야 함.
+@RequiredArgsConstructor
 public class PointController {
 
-    @Autowired
-    private PointService pointService;
+    private final PointService pointService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    // ✅ 포인트 내역 조회
-    @GetMapping("/history")
-    public ResponseEntity<?> getUserPointHistory(@RequestHeader("Authorization") String token) {
-        List<PointDto> pointHistory = pointService.getUserPointHistory(token);
-
-        // 🔥 올바른 JSON 형태로 변환해서 반환
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "points", pointHistory  // ✅ List<PointDto>를 직접 반환해야 함
-        ));
+    // 사용자의 포인트 내역 조회 (페이징 지원)
+    @GetMapping
+    public ResponseEntity<Page<PointDto>> getUserPoints(HttpServletRequest request,
+                                                        @RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "10") int size) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Page<PointDto> points = pointService.getUserPoints(userId, page, size);
+        return ResponseEntity.ok(points);
     }
 
+    // 사용자의 현재 보유 포인트 조회
     @GetMapping("/balance")
-    public ResponseEntity<?> getUserPointBalance(@RequestHeader("Authorization") String token) {
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        int totalPoints = pointService.getUserTotalPoints(userId); // ✅ 총 적립금 계산
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "points", totalPoints // ✅ 전체 적립금 잔액 반환
-        ));
+    public ResponseEntity<Integer> getUserPointBalance(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        int balance = pointService.getUserPointBalance(userId);
+        return ResponseEntity.ok(balance);
     }
 
-    // ✅ 포인트 적립
-    @PostMapping("/add")
-    public ResponseEntity<?> addPoints(
-            @RequestHeader("Authorization") String token,
-            @RequestBody Map<String, Object> request) {
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        String userIdStr = String.valueOf(userId);
-
-        int amount = (int) request.get("amount");
-        String description = (String) request.get("description");
-
-        pointService.addPoints(userId, amount, description);
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "포인트가 적립되었습니다."
-        ));
-    }
-
-    // ✅ 포인트 사용
+    // 사용자가 포인트를 사용하여 결제
     @PostMapping("/use")
-    public ResponseEntity<?> usePoints(
-            @RequestHeader("Authorization") String token,
-            @RequestBody Map<String, Object> request) {
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        String userIdStr = String.valueOf(userId);
-
-        int amount = (int) request.get("amount");
-
-        pointService.usePoints(userId, amount);
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "포인트가 사용되었습니다."
-        ));
+    public ResponseEntity<String> usePoints(HttpServletRequest request,
+                                            @RequestParam int amount,
+                                            @RequestParam PointReason reason,
+                                            @RequestParam(required = false) Long orderId) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        pointService.usePoints(userId, amount, reason, orderId);
+        return ResponseEntity.ok("포인트가 사용되었습니다.");
     }
 }

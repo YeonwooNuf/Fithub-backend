@@ -4,9 +4,10 @@ import com.example.musinsabackend.dto.CouponDto;
 import com.example.musinsabackend.dto.PointDto;
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
-import com.example.musinsabackend.model.Role;
-import com.example.musinsabackend.model.User;
-import com.example.musinsabackend.repository.UserCouponRepository;
+import com.example.musinsabackend.model.user.Role;
+import com.example.musinsabackend.model.user.User;
+import com.example.musinsabackend.repository.PointRepository;
+import com.example.musinsabackend.repository.user.CouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -23,13 +24,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final UserCouponRepository userCouponRepository;
+    private final CouponRepository couponRepository;
+    private final PointRepository pointRepository;
 
-    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, UserCouponRepository userCouponRepository) {
+    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, CouponRepository couponRepository, PointRepository pointRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
-        this.userCouponRepository = userCouponRepository;
+        this.couponRepository = couponRepository;
+        this.pointRepository = pointRepository;
     }
 
     // 회원가입
@@ -70,12 +73,12 @@ public class UserService {
     }
 
     // 사용자 정보 조회
-    public User findUserByUsername(String username) {
+    public UserDto findUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         UserDto userDto = new UserDto(user);
-        userDto.setUserId(user.getUserId()); // ✅ 추가
+        userDto.setUserId(user.getUserId());
         userDto.setUsername(user.getUsername());
         userDto.setNickname(user.getNickname());
         userDto.setProfileImageUrl(user.getProfileImageUrl());
@@ -83,23 +86,33 @@ public class UserService {
         userDto.setBirthdate(user.getBirthdate());
         userDto.setPhone(user.getPhone());
 
-        userDto.setCoupons(user.getUserCoupons().stream()  // ✅ UserCoupon으로 변경
+        userDto.setCoupons(user.getUserCoupons().stream()
                 .map(userCoupon -> new CouponDto(
                         userCoupon.getCoupon().getId(),
                         userCoupon.getCoupon().getName(),
                         userCoupon.getCoupon().getDiscount(),
                         userCoupon.getExpiryDate(),
-                        userCoupon.isUsed()  // ✅ 오류 해결
+                        userCoupon.isUsed()
                 ))
                 .toList());
 
-
-        userDto.setPoints(user.getPoints().stream()
-                .map(point -> new PointDto(point.getId(), point.getDescription(), point.getAmount(), point.getDate()))
+        // ✅ 포인트 정보 추가
+        userDto.setPoints(pointRepository.findByUser_UserId(user.getUserId(), Pageable.unpaged()).stream()
+                .map(point -> new PointDto(
+                        point.getId(),
+                        user.getUserId(),
+                        point.getAmount(),
+                        point.getStatus(),
+                        point.getType(),
+                        point.getReason().name(),   // ENUM -> String 변환
+                        point.getCreatedAt(),
+                        point.getExpiredAt(),
+                        point.getOrder() != null ? point.getOrder().getId() : null
+                ))
                 .toList());
-
-        return user;
+        return userDto;
     }
+
 
     // 사용자 ID로 사용자 정보 조회
     public User findUserById(Long userId) {
@@ -109,7 +122,7 @@ public class UserService {
 
     // 쿠폰 개수 직접 가져오기
     public int getUserCouponCount(Long userId) {
-        return userCouponRepository.countCouponsByUserId(userId);
+        return couponRepository.countCouponsByUserId(userId);
     }
 
     // 전체 사용자 조회 (페이지네이션) - username, nickname, birthdate, phone, gender 포함

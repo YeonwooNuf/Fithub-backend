@@ -1,123 +1,105 @@
 package com.example.musinsabackend.service;
 
 import com.example.musinsabackend.dto.PointDto;
-import com.example.musinsabackend.jwt.JwtTokenProvider;
-import com.example.musinsabackend.model.Point;
-import com.example.musinsabackend.model.User;
+import com.example.musinsabackend.model.point.Point;
+import com.example.musinsabackend.model.point.PointStatus;
+import com.example.musinsabackend.model.point.PointReason;
 import com.example.musinsabackend.repository.PointRepository;
 import com.example.musinsabackend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.musinsabackend.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PointService {
 
-    @Autowired
-    private PointRepository pointRepository;
+    private final PointRepository pointRepository;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    // ✅ 사용자 포인트 내역 조회 (userId 기반)
-    public List<PointDto> getUserPointHistory(String token) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        List<Point> points = pointRepository.findByUser(user); // ✅ 사용자의 포인트 내역 가져오기
-
-        return points.stream().map(point -> new PointDto(
-                point.getId(),
-                point.getDescription(),
-                point.getAmount(),
-                point.getDate()
-        )).collect(Collectors.toList()); // ✅ List<PointDto> 형태로 변환
+    // 특정 사용자 포인트 내역 조회 (페이징 처리 포함)
+    public Page<PointDto> getUserPoints(Long userId, int page, int size) {
+        Page<Point> points = pointRepository.findByUser_UserId(userId, PageRequest.of(page, size));
+        return points.map(this::convertToDto);
     }
 
+    // 사용자의 현재 보유 포인트 조회
+    public int getUserPointBalance(Long userId) {
+        return pointRepository.findByUser_UserIdAndStatus(userId, PointStatus.ACTIVE)
+                .stream()
+                .mapToInt(Point::getAmount)
+                .sum();
+    }
 
-    // ✅ 포인트 적립 (userId 기반)
-    public void addPoints(Long userId, int amount, String description) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
+    // 포인트 적립 (일반 구매 적립)
+    @Transactional
+    public void earnPoints(Long userId, int amount, PointReason reason, Long orderId) {
         Point point = new Point();
-        point.setUser(user);
+        point.setUser(userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")));
         point.setAmount(amount);
-        point.setDescription(description);
-        point.setDate(LocalDateTime.now());
-
+        point.setStatus(PointStatus.ACTIVE);
+        point.setType("EARN");
+        point.setReason(reason);
+        point.setCreatedAt(LocalDateTime.now());
+        point.setExpiredAt(LocalDateTime.now().plusYears(1)); // 1년 후 만료
+        if (orderId != null) {
+            point.setOrder(orderRepository.findById(orderId).orElse(null));
+        }
         pointRepository.save(point);
     }
 
-    // ✅ 포인트 사용 (userId 기반)
-    public void usePoints(Long userId, int amount) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    // 포인트 사용 (결제 시 차감)
+    @Transactional
+    public void usePoints(Long userId, int amount, PointReason reason, Long orderId) {
+        List<Point> activePoints = pointRepository.findByUser_UserIdAndStatus(userId, PointStatus.ACTIVE);
+        int totalAvailable = activePoints.stream().mapToInt(Point::getAmount).sum();
 
-        int totalPoints = pointRepository.findByUser(user)
-                .stream()
-                .mapToInt(Point::getAmount)
-                .sum();
-
-        if (totalPoints < amount) {
-            throw new IllegalArgumentException("포인트가 부족합니다.");
+        if (totalAvailable < amount) {
+            throw new IllegalArgumentException("보유 포인트가 부족합니다.");
         }
 
-        Point point = new Point();
-        point.setUser(user);
-        point.setAmount(-amount); // 사용 시 음수 처리
-        point.setDescription("포인트 사용");
-        point.setDate(LocalDateTime.now());
+        int remainingAmount = amount;
+        for (Point point : activePoints) {
+            if (remainingAmount <= 0) break;
 
-        pointRepository.save(point);
-    }
-
-    // ✅ 포인트 차감 메소드 추가(환불, 취소 시)
-    public void deductPoints(Long userId, int pointUsage) {
-        // 사용자 정보 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        // 현재 보유 포인트 합산
-        int totalPoints = pointRepository.findByUser(user)
-                .stream()
-                .mapToInt(Point::getAmount)
-                .sum();
-
-        if (totalPoints < pointUsage) {
-            throw new IllegalArgumentException("사용 가능한 포인트가 부족합니다.");
-        }
-
-        // 포인트 차감 로직
-        for (Point point : pointRepository.findByUser(user)) {
-            if (point.getAmount() >= pointUsage) {
-                point.setAmount(point.getAmount() - pointUsage);
-                pointRepository.save(point);
-                return;
-            } else {
-                pointUsage -= point.getAmount();
-                point.setAmount(0);
-                pointRepository.save(point);
+            int deduction = Math.min(point.getAmount(), remainingAmount);
+            point.setAmount(point.getAmount() - deduction);
+            if (point.getAmount() == 0) {
+                point.setStatus(PointStatus.USED);
             }
+            remainingAmount -= deduction;
+            pointRepository.save(point);
         }
     }
 
-    // ✅ 사용자의 총 적립금(잔액) 계산
-    public int getUserTotalPoints(Long userId) {
-        // 사용자의 전체 포인트 내역 조회
-        List<Point> points = pointRepository.findByUser_UserId(userId);
+    // 포인트 만료 처리 (스케줄링 가능)
+    @Transactional
+    public void expirePoints() {
+        List<Point> expiringPoints = pointRepository.findByExpiredAtBeforeAndStatus(LocalDateTime.now(), PointStatus.ACTIVE);
+        for (Point point : expiringPoints) {
+            point.setStatus(PointStatus.EXPIRED);
+            pointRepository.save(point);
+        }
+    }
 
-        // 모든 포인트 amount 합산
-        return points.stream()
-                .mapToInt(Point::getAmount)
-                .sum(); // ✅ 최종 적립금 반환
+    private PointDto convertToDto(Point point) {
+        return new PointDto(
+                point.getId(),
+                point.getUser().getUserId(),
+                point.getAmount(),
+                point.getStatus(),
+                point.getType(),
+                point.getReason().name(),
+                point.getCreatedAt(),
+                point.getExpiredAt(),
+                point.getOrder() != null ? point.getOrder().getId() : null
+        );
     }
 }
