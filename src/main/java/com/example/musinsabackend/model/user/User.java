@@ -154,4 +154,12 @@ public class User {
     public void setAddresses(List<Address> addresses) { // ✅ 주소 Setter 추가
         this.addresses = addresses;
     }
+
+    public User(Long userId) {
+        this.userId = userId;
+    }
+
+    public User() {
+
+    }
 }
