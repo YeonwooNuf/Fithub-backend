@@ -36,10 +36,10 @@ public class PointService {
      * ✅ 사용자의 현재 보유 포인트 조회
      */
     public int getUserPointBalance(Long userId) {
-        return pointRepository.findByUser_UserIdAndStatus(userId, PointStatus.EARNED)
-                .stream()
-                .mapToInt(Point::getAmount)
-                .sum();
+        Integer earnedPoints = pointRepository.findTotalEarnedPoints(userId).orElse(0);
+        Integer usedPoints = pointRepository.findTotalUsedPoints(userId).orElse(0);
+
+        return earnedPoints - usedPoints;
     }
 
     /**
