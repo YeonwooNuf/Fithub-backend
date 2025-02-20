@@ -12,6 +12,7 @@ import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.EventRepository;
 import com.example.musinsabackend.repository.EventRewardRepository;
 import com.example.musinsabackend.repository.PointRepository;
+import com.example.musinsabackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventRewardRepository eventRewardRepository;
     private final PointRepository pointRepository;
+    private final UserRepository userRepository;
 
     // 📌 이벤트 등록
     public EventDto createEvent(EventDto eventDto) {
@@ -103,15 +105,25 @@ public class EventService {
             throw new RuntimeException("이 이벤트는 적립금 지급 이벤트가 아닙니다.");
         }
 
-        // ✅ 이미 참여한 사용자인지 확인
-        boolean alreadyClaimed = eventRewardRepository.existsByEventIdAndUserId(eventId, userId);
+        // ✅ 사용자 정보 가져오기 (User 객체로 변환)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // ✅ 이미 참여한 사용자인지 확인 (userId → User 객체)
+        boolean alreadyClaimed = eventRewardRepository.findByEventAndUser(event, user).isPresent();
+
+        System.out.println("🔍 이벤트 참여 여부 확인: " + alreadyClaimed);
+        System.out.println("🔍 이벤트 ID: " + event.getId());
+        System.out.println("🔍 사용자 ID: " + user.getUserId());
+        System.out.println("🔍 저장된 EventReward 개수: " + eventRewardRepository.count());
+
         if (alreadyClaimed) {
             throw new RuntimeException("이미 적립금을 받은 이벤트입니다.");
         }
 
         // ✅ 적립금 지급
         Point point = new Point();
-        point.setUser(new User(userId)); // 유저 ID만 설정
+        point.setUser(user);
         point.setAmount(event.getRewardPoint());
         point.setStatus(PointStatus.EARNED);
         point.setReason(PointReason.EVENT_REWARD);
@@ -121,13 +133,14 @@ public class EventService {
 
         // ✅ 이벤트 참여 기록 저장
         EventReward eventReward = new EventReward();
+        eventReward.setUser(user); // ✅ 이제 user를 직접 저장 가능!
         eventReward.setEvent(event);
-        eventReward.setUserId(userId);
         eventReward.setReceivedAt(LocalDateTime.now());
 
+        System.out.println("🔍 이벤트 참여 기록 저장 전: userId=" + userId + ", eventId=" + eventId);
         eventRewardRepository.save(eventReward);
+        System.out.println("✅ 이벤트 참여 기록 저장 완료!");
 
-        // ✅ 참여 완료 정보 반환
         return new EventRewardDto(userId, eventId, eventReward.getReceivedAt());
     }
 }

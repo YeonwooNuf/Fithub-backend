@@ -1,10 +1,11 @@
 package com.example.musinsabackend.repository;
 
+import com.example.musinsabackend.model.event.Event;
 import com.example.musinsabackend.model.event.EventReward;
+import com.example.musinsabackend.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
-@Repository
 public interface EventRewardRepository extends JpaRepository<EventReward, Long> {
-    boolean existsByEventIdAndUserId(Long eventId, Long userId);
+    Optional<EventReward> findByEventAndUser(Event event, User user); // ✅ userId 대신 User 객체로 변경
 }
