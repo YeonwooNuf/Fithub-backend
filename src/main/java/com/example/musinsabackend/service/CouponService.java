@@ -36,15 +36,6 @@ public class CouponService {
 
         List<UserCoupon> userCoupons = couponRepository.findUserCouponsByUser(user);
 
-//        // 만료된 쿠폰 삭제
-//        userCoupons.removeIf(userCoupon -> {
-//            if (userCoupon.getExpiryDate().isBefore(LocalDate.now()) || userCoupon.isUsed()) {
-//                userCouponRepository.delete(userCoupon);
-//                return true;
-//            }
-//            return false;
-//        });
-
         return userCoupons.stream()
                 .filter(userCoupon -> userCoupon.getExpiryDate().isAfter(LocalDate.now()))  // 만료된 쿠폰 필터링
                 .map(this::convertToDto)
@@ -197,6 +188,14 @@ public class CouponService {
         LocalDate today = LocalDate.now();
         List<Coupon> validCoupons = adminCouponRepository.findByExpiryDateAfterOrExpiryDateEquals(today, today);
         return validCoupons.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    // ✅ 관리자용: 이벤트 등록 시 수동 쿠폰 조회
+    public List<CouponDto> getManualCoupons() {
+        List<Coupon> manualCoupons = adminCouponRepository.findByDistributionType(CouponDistributionType.MANUAL);
+        return manualCoupons.stream()
+                .map(coupon -> new CouponDto(coupon.getId(), coupon.getName(), coupon.getCouponCode()))
+                .collect(Collectors.toList());
     }
 
     // ✅ 임시로 오류 방지용 메서드 추가 (결제 기능 구현 전)

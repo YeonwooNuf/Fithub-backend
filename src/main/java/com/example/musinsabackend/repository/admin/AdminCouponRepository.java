@@ -33,4 +33,5 @@ public interface AdminCouponRepository extends JpaRepository<Coupon, Long> {
 
     // ✅ 유효한 쿠폰 조회 (현재 날짜 이후)
     List<Coupon> findByExpiryDateAfterOrExpiryDateEquals(LocalDate currentDate, LocalDate today);
+
 }

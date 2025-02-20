@@ -58,6 +58,13 @@ public class AdminCouponController {
         return ResponseEntity.ok(expiredCoupons);
     }
 
+    // ✅ 수동 지급 쿠폰 목록 조회 API
+    @GetMapping("/manual")
+    public ResponseEntity<List<CouponDto>> getManualCoupons() {
+        List<CouponDto> manualCoupons = couponService.getManualCoupons();
+        return ResponseEntity.ok(manualCoupons);
+    }
+
     // ✅ 쿠폰 수정
     @PutMapping("/update/{couponId}")
     public ResponseEntity<?> updateCoupon(@PathVariable Long couponId, @RequestBody CouponDto couponDto) {

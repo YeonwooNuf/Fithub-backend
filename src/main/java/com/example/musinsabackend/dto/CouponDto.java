@@ -30,6 +30,13 @@ public class CouponDto {
         this.isUsed = isUsed;
     }
 
+    // ✅ 이벤트 추가 수동 쿠폰 선택 시 사용
+    public CouponDto(Long id, String name, String couponCode) {
+        this.id = id;
+        this.name = name;
+        this.couponCode = couponCode;
+    }
+
     public CouponDto(Long id, String name, int discount, int maxDiscountAmount, String description,
                      LocalDate issuedDate, LocalDate expiryDate, boolean isUsed, CouponTarget target,
                      String targetValue, CouponDistributionType distributionType, String couponCode) {
