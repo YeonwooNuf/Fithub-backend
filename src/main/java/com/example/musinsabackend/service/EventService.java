@@ -39,12 +39,14 @@ public class EventService {
                 .eventType(eventDto.getEventType())
                 .couponCode(eventDto.getCouponCode())
                 .rewardPoint(eventDto.getRewardPoint())
+                .startDate(eventDto.getStartDate())
+                .endDate(eventDto.getEndDate())
                 .build();
 
         eventRepository.save(event);
         return new EventDto(event.getId(), event.getTitle(), event.getMainContent(),
                 event.getAdditionalContent(), event.getImageUrl(), event.getEventType(),
-                event.getCouponCode(), event.getRewardPoint(), event.getCreatedAt());
+                event.getCouponCode(), event.getRewardPoint(), event.getStartDate(), event.getEndDate());
     }
 
     // 📌 이벤트 수정
@@ -59,12 +61,14 @@ public class EventService {
         event.setEventType(eventDto.getEventType());
         event.setCouponCode(eventDto.getCouponCode());
         event.setRewardPoint(eventDto.getRewardPoint());
+        event.setStartDate(eventDto.getStartDate());
+        event.setEndDate(eventDto.getEndDate());
 
         eventRepository.save(event);
 
         return new EventDto(event.getId(), event.getTitle(), event.getMainContent(),
                 event.getAdditionalContent(), event.getImageUrl(), event.getEventType(),
-                event.getCouponCode(), event.getRewardPoint(), event.getCreatedAt());
+                event.getCouponCode(), event.getRewardPoint(), event.getStartDate(), event.getEndDate());
     }
 
     // 📌 전체 이벤트 목록 조회
@@ -72,7 +76,7 @@ public class EventService {
         return eventRepository.findAll().stream()
                 .map(event -> new EventDto(event.getId(), event.getTitle(), event.getMainContent(),
                         event.getAdditionalContent(), event.getImageUrl(), event.getEventType(),
-                        event.getCouponCode(), event.getRewardPoint(), event.getCreatedAt()))
+                        event.getCouponCode(), event.getRewardPoint(), event.getStartDate(), event.getEndDate()))
                 .collect(Collectors.toList());
     }
 
@@ -82,7 +86,7 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("이벤트를 찾을 수 없습니다."));
         return new EventDto(event.getId(), event.getTitle(), event.getMainContent(),
                 event.getAdditionalContent(), event.getImageUrl(), event.getEventType(),
-                event.getCouponCode(), event.getRewardPoint(), event.getCreatedAt());
+                event.getCouponCode(), event.getRewardPoint(), event.getStartDate(), event.getEndDate());
     }
 
     // 📌 이벤트 삭제

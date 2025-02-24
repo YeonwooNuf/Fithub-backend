@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -37,10 +38,12 @@ public class Event {
 
     private Integer rewardPoint; // 적립금 이벤트일 경우 지급할 포인트
 
-    private LocalDateTime createdAt; // 이벤트 생성 시간
+    private LocalDate startDate; // 이벤트 시작 날짜(생성)
+
+    private LocalDate endDate; // 이벤트 종료 날짜
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        this.startDate = LocalDate.now();
     }
 }

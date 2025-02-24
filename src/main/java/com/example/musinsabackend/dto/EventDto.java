@@ -3,7 +3,7 @@ package com.example.musinsabackend.dto;
 import com.example.musinsabackend.model.event.EventType;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,5 +19,6 @@ public class EventDto {
     private EventType eventType;      // 이벤트 타입 (쿠폰 지급 / 적립금 지급)
     private String couponCode;        // 쿠폰 코드 (쿠폰 이벤트일 경우)
     private Integer rewardPoint;      // 적립금 지급액 (적립금 이벤트일 경우)
-    private LocalDateTime createdAt;  // 이벤트 생성 시간
+    private LocalDate startDate;  // 이벤트 시작 날짜(생성)
+    private LocalDate endDate;  // 이벤트 종료 날짜
 }
