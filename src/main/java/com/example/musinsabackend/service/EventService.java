@@ -16,6 +16,7 @@ import com.example.musinsabackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class EventService {
                 .eventType(eventDto.getEventType())
                 .couponCode(eventDto.getCouponCode())
                 .rewardPoint(eventDto.getRewardPoint())
-                .startDate(eventDto.getStartDate())
+                .startDate(LocalDate.now())
                 .endDate(eventDto.getEndDate())
                 .build();
 
