@@ -3,6 +3,7 @@ package com.example.musinsabackend.dto;
 import com.example.musinsabackend.model.Brand;
 import com.example.musinsabackend.model.CartItem;
 import com.example.musinsabackend.model.Product;
+import com.example.musinsabackend.model.ProductCategory;
 import lombok.*;
 
 @Getter
@@ -22,6 +23,7 @@ public class CartItemDto {
     private String color;
     private int quantity;
     private double price;  // Product에서 가져옴
+    private ProductCategory category;
 
     public static CartItemDto fromEntity(CartItem cartItem) {
         Product product = cartItem.getProduct();
@@ -39,6 +41,7 @@ public class CartItemDto {
                 .color(cartItem.getColor())
                 .quantity(cartItem.getQuantity())
                 .price(product.getPrice())  // 가격을 Product에서 가져오기
+                .category(product.getCategory())
                 .build();
     }
 }
