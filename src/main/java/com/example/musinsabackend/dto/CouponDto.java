@@ -1,5 +1,6 @@
 package com.example.musinsabackend.dto;
 
+import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.coupon.CouponDistributionType;
 import com.example.musinsabackend.model.coupon.CouponTarget;
 
@@ -90,4 +91,22 @@ public class CouponDto {
 
     public String getCouponCode() { return couponCode; }
     public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
+
+    public static CouponDto fromEntity(Coupon coupon) {
+        return new CouponDto(
+                coupon.getId(),
+                coupon.getName(),
+                coupon.getDiscount(),
+                coupon.getMaxDiscountAmount(),
+                coupon.getDescription(),
+                null, // issuedDate는 UserCoupon에서 가져와야 하므로 null
+                coupon.getExpiryDate(),
+                false, // 기본값: 사용하지 않은 쿠폰
+                coupon.getTarget(),
+                coupon.getTargetValue(),
+                coupon.getDistributionType(),
+                coupon.getCouponCode()
+        );
+    }
+
 }
