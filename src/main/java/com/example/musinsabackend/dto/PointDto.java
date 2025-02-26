@@ -1,8 +1,15 @@
 package com.example.musinsabackend.dto;
 
 import com.example.musinsabackend.model.point.PointStatus;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Builder
+@Getter
+@Setter
 public class PointDto {
     private Long id;
     private Long userId;
@@ -23,37 +30,5 @@ public class PointDto {
         this.createdAt = createdAt;
         this.expiredAt = expiredAt;
         this.orderId = orderId;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public PointStatus getStatus() {
-        return status;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
-    }
-
-    public Long getOrderId() {
-        return orderId;
     }
 }
