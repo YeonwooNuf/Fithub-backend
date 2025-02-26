@@ -33,7 +33,6 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Point p WHERE p.user.userId = :userId AND p.status = 'USED'")
     Optional<Integer> findTotalUsedPoints(@Param("userId") Long userId);
 
-
     // ✅ 만료 대상 포인트 조회 (적립된 상태에서 기간 만료된 포인트)
     @Query("SELECT p FROM Point p WHERE p.expiredAt <= :now AND p.status = 'EARNED'")
     List<Point> findByExpiredAtBeforeAndStatus(LocalDateTime now, PointStatus status);
