@@ -43,7 +43,7 @@ public class CartService {
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
 
         // 같은 상품(같은 색상, 사이즈)이 이미 장바구니에 있는지 확인
-        CartItem cartItem = cartItemRepository.findByUserIdAndProductIdAndSizeAndColor(userId, productId, size, color)
+        CartItem cartItem = cartItemRepository.findByUser_UserIdAndProductIdAndSizeAndColor(userId, productId, size, color)
                 .orElse(CartItem.builder()
                         .user(user)
                         .product(product)
@@ -60,7 +60,7 @@ public class CartService {
     /** 장바구니 목록 조회 */
     @Transactional(readOnly = true)
     public CartResponseDto getCartItems(Long userId) {
-        List<CartItemDto> cartItems = cartItemRepository.findByUserId(userId).stream()
+        List<CartItemDto> cartItems = cartItemRepository.findByUser_UserId(userId).stream()
                 .map(CartItemDto::fromEntity)
                 .collect(Collectors.toList());
 
@@ -85,7 +85,7 @@ public class CartService {
     /** 장바구니에서 상품 삭제 */
     @Transactional
     public void removeFromCart(Long userId, Long cartItemId) {
-        CartItem cartItem = cartItemRepository.findByIdAndUserId(cartItemId, userId)
+        CartItem cartItem = cartItemRepository.findByIdAndUser_UserId(cartItemId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("장바구니 상품을 찾을 수 없습니다."));
         cartItemRepository.delete(cartItem);
     }
@@ -93,7 +93,7 @@ public class CartService {
     /** 장바구니 전체 삭제 */
     @Transactional
     public void clearCart(Long userId) {
-        cartItemRepository.deleteByUserId(userId);
+        cartItemRepository.deleteByUser_UserId(userId);
     }
 
     /** 사용 가능한 쿠폰 목록 조회 (UserCoupon 활용) */
