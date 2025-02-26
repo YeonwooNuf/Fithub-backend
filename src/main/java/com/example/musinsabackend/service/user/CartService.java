@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +104,8 @@ public class CartService {
 
         return userCoupons.stream()
                 .map(userCoupon -> CouponDto.fromEntity(userCoupon.getCoupon()))
+                .filter(userCoupon ->
+                        userCoupon.getExpiryDate().isAfter(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 

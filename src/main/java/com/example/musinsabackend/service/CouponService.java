@@ -44,7 +44,12 @@ public class CouponService {
 
     // ✅ 마이페이지에서 현재 보유 쿠폰 개수 조회
     public int getCouponCount(Long userId) {
-        return couponRepository.countCouponsByUserId(userId);
+        return (int) couponRepository.findUserCouponsByUser(userRepository.findById(userId)
+                        .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.")))
+                .stream()
+                .filter(userCoupon ->
+                        userCoupon.getExpiryDate().isAfter(LocalDate.now()))    // 만료된 쿠폰 필터링
+                .count();
     }
 
     // ✅ 쿠폰 등록 (자동 지급, 수동 등록)
