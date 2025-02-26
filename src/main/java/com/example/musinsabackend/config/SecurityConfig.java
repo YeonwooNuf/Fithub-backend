@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/uploads/**","/api/users/home","/api/products","api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/events/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/users/mypage").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/cart/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
                         .anyRequest().authenticated()
                 )
