@@ -1,5 +1,6 @@
 package com.example.musinsabackend.controller.user;
 
+import com.example.musinsabackend.dto.CartRequestDto;
 import com.example.musinsabackend.dto.CartResponseDto;
 import com.example.musinsabackend.service.user.CartService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,12 +29,13 @@ public class CartController {
     @PostMapping("/add")
     public ResponseEntity<String> addToCart(
             HttpServletRequest request,
-            @RequestParam Long productId,
-            @RequestParam String size,
-            @RequestParam String color,
-            @RequestParam int quantity) {
+            @RequestBody CartRequestDto requestDto) { // ✅ 기존 DTO 활용
+
         Long userId = (Long) request.getAttribute("userId");
-        cartService.addToCart(userId, productId, size, color, quantity);
+
+        // ✅ 서비스 호출 (userId와 함께 상품 정보 전달)
+        cartService.addToCart(userId, requestDto.getProductId(), requestDto.getSize(), requestDto.getColor(), requestDto.getQuantity());
+
         return ResponseEntity.ok("상품이 장바구니에 추가되었습니다.");
     }
 
