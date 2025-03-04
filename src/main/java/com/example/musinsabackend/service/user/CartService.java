@@ -166,4 +166,21 @@ public class CartService {
 
         return false;
     }
+
+    /** ✅ 장바구니 상품 수량 업데이트 */
+    @Transactional
+    public void updateCartItemQuantity(Long userId, Long cartItemId, int newQuantity) {
+        // ✅ 해당 장바구니 아이템 찾기
+        CartItem cartItem = cartItemRepository.findByIdAndUser_UserId(cartItemId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("장바구니에서 해당 상품을 찾을 수 없습니다."));
+
+        // ✅ 최소 수량 1 이상 유지
+        if (newQuantity < 1) {
+            throw new IllegalArgumentException("상품 수량은 1개 이상이어야 합니다.");
+        }
+
+        // ✅ 수량 업데이트
+        cartItem.setQuantity(newQuantity);
+        cartItemRepository.save(cartItem);
+    }
 }

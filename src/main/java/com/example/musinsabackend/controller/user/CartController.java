@@ -67,4 +67,19 @@ public class CartController {
         int finalPrice = cartService.calculateTotalPrice(userId, selectedCoupons, usedPoints);
         return ResponseEntity.ok(finalPrice);
     }
+
+    /** ✅ 장바구니 상품 수량 변경 */
+    @PutMapping("/{cartItemId}/quantity")
+    public ResponseEntity<String> updateCartItemQuantity(
+            HttpServletRequest request,
+            @PathVariable Long cartItemId,
+            @RequestBody CartRequestDto requestDto) {
+
+        Long userId = (Long) request.getAttribute("userId");
+
+        // ✅ 서비스 호출 (userId, cartItemId, 변경된 수량 전달)
+        cartService.updateCartItemQuantity(userId, cartItemId, requestDto.getQuantity());
+
+        return ResponseEntity.ok("장바구니 상품 수량이 업데이트되었습니다.");
+    }
 }
