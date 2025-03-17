@@ -15,7 +15,7 @@ public class Payment {
     private String paymentId; // 결제 고유 ID
 
     @Column(nullable = false)
-    private Double amount; // 원래 결제 금액 (할인 전)
+    private Double totalAmount; // 원래 결제 금액 (할인 전)
 
     @Column(nullable = false)
     private Double finalAmount; // 최종 결제 금액 (할인 후)
@@ -41,10 +41,10 @@ public class Payment {
 
     public Payment() {}
 
-    public Payment(String paymentId, Double amount, Double finalAmount, Integer usedPoints, Integer earnedPoints,
+    public Payment(String paymentId, Double totalAmount, Double finalAmount, Integer usedPoints, Integer earnedPoints,
                    String usedCoupons, String status, User user) {
         this.paymentId = paymentId;
-        this.amount = amount;
+        this.totalAmount = totalAmount;
         this.finalAmount = finalAmount;
         this.usedPoints = usedPoints;
         this.earnedPoints = earnedPoints;
@@ -57,7 +57,7 @@ public class Payment {
     // ✅ Getter & Setter
     public Long getId() { return id; }
     public String getPaymentId() { return paymentId; }
-    public Double getAmount() { return amount; }
+    public Double getTotalAmount() { return totalAmount; }
     public Double getFinalAmount() { return finalAmount; }
     public Integer getUsedPoints() { return usedPoints; }
     public Integer getEarnedPoints() { return earnedPoints; }
@@ -67,7 +67,7 @@ public class Payment {
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
-    public void setAmount(Double amount) { this.amount = amount; }
+    public void settotalAmount(Double amount) { this.totalAmount = amount; }
     public void setFinalAmount(Double finalAmount) { this.finalAmount = finalAmount; }
     public void setUsedPoints(Integer usedPoints) { this.usedPoints = usedPoints; }
     public void setEarnedPoints(Integer earnedPoints) { this.earnedPoints = earnedPoints; }
