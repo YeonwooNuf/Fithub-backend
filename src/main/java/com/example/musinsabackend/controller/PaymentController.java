@@ -1,67 +1,117 @@
 package com.example.musinsabackend.controller;
 
-import com.example.musinsabackend.jwt.JwtTokenProvider;
-import com.example.musinsabackend.service.PaymentService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.example.musinsabackend.model.Payment;
+import com.example.musinsabackend.model.user.User;
+import com.example.musinsabackend.repository.PaymentRepository;
+import com.example.musinsabackend.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/payments")
-@Slf4j
+@RequestMapping("/api/payment")
 public class PaymentController {
 
-    @Autowired
-    private PaymentService paymentService;
+    private final String PORTONE_API_URL = "https://api.portone.io/payments/";
+    private final String PORTONE_TOKEN_URL = "https://api.portone.io/auth/token";
+    private final String API_KEY = "8046112462071686";
+    private final String API_SECRET = "i1gfTdQ4LW1fseu3tW62ngmg4BhHjNYCw5Bg4BpgnHR52sfF3vaXZbfUVrX6MUZN4jUWfA8opErBrdIu";
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider; // ✅ JWT 파싱을 위한 TokenProvider 추가
+    private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
 
-    /**
-     * 결제 처리
-     * @param token Authorization 헤더로 전달받은 JWT 토큰
-     * @param totalAmount 총 결제 금액
-     * @param pointUsage 사용 포인트 금액
-     * @param couponId 사용 쿠폰 ID (선택적)
-     * @return 최종 결제 금액 및 적립금 정보
-     */
-    @PostMapping
-    public ResponseEntity<?> processPayment(
-            @RequestHeader("Authorization") String token,
-            @RequestParam int totalAmount,
-            @RequestParam(required = false, defaultValue = "0") int pointUsage,
-            @RequestParam(required = false) Long couponId
-    ) {
-        try {
-            log.info("결제 요청: 총 금액={}, 사용 포인트={}, 쿠폰 ID={}", totalAmount, pointUsage, couponId);
+    public PaymentController(PaymentRepository paymentRepository, UserRepository userRepository) {
+        this.paymentRepository = paymentRepository;
+        this.userRepository = userRepository;
+    }
 
-            // ✅ JWT에서 userId 가져오기
-            Long userId = jwtTokenProvider.getUserIdFromToken(token);
-            log.info("결제 요청 - 사용자 ID: {}", userId);
+    @Transactional
+    @PostMapping("/complete")
+    public ResponseEntity<?> completePayment(@RequestBody Map<String, Object> request) {
+        String paymentId = (String) request.get("paymentId");
+        Integer usedPoints = (Integer) request.get("usedPoints");
+        String usedCoupons = (String) request.get("usedCoupons");
 
-            // ✅ 결제 처리
-            int finalAmount = paymentService.processPayment(userId, totalAmount, pointUsage, couponId);
-
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "결제가 성공적으로 완료되었습니다.",
-                    "finalAmount", finalAmount
-            ));
-        } catch (IllegalArgumentException e) {
-            log.error("결제 실패: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", e.getMessage()
-            ));
-        } catch (Exception e) {
-            log.error("결제 처리 중 오류 발생", e);
-            return ResponseEntity.status(500).body(Map.of(
-                    "success", false,
-                    "message", "결제 처리 중 문제가 발생하였습니다."
-            ));
+        if (paymentId == null) {
+            return ResponseEntity.badRequest().body("❌ paymentId가 필요합니다.");
         }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + getPortOneAccessToken());
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    PORTONE_API_URL + paymentId,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+
+            if ("paid".equals(jsonResponse.get("status").asText())) {
+                Double amount = jsonResponse.get("totalAmount").asDouble();
+                Double finalAmount = amount - usedPoints;
+                Integer earnedPoints = (int) (finalAmount * 0.01);
+
+                User currentUser = getCurrentUser();
+                if (currentUser == null) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ 사용자 인증 실패");
+                }
+
+                Payment payment = new Payment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCoupons, "PAID", currentUser);
+                paymentRepository.save(payment);
+
+                return ResponseEntity.ok("✅ 결제 검증 완료 및 저장됨");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ 결제 검증 실패");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ 서버 오류 발생");
+        }
+    }
+
+    private String getPortOneAccessToken() {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String requestBody = String.format("{\"apiKey\": \"%s\", \"apiSecret\": \"%s\"}", API_KEY, API_SECRET);
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                PORTONE_TOKEN_URL,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+            return jsonResponse.get("accessToken").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("❌ PortOne Access Token 요청 실패");
+        }
+    }
+
+    private User getCurrentUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        }
+        return null;
     }
 }
