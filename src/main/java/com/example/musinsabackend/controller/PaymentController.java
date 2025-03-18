@@ -27,7 +27,7 @@ public class PaymentController {
     private final String PORTONE_API_URL = "https://api.portone.io/payments/";
     private final String PORTONE_TOKEN_URL = "https://api.portone.io/login/api-secret";
     private final String API_KEY = "8046112462071686";
-    private final String API_SECRET = "i1gfTdQ4LW1fseu3tW62ngmg4BhHjNYCw5Bg4BpgnHR52sfF3vaXZbfUVrX6MUZN4jUWfA8opErBrdIu";
+    private final String API_SECRET = "6yn7EMHsbsHDEK5bNFGvhGUhMEg3b1LobW8AbUhfHVUdEZRdpyt7a5ehe4vWH5Z5240Pg27IJIjGiS5x";
 
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
@@ -60,7 +60,7 @@ public class PaymentController {
             String token = getPortOneAccessToken();
             logger.info("✅ PortOne API 요청에 사용될 액세스 토큰: {}", token); // 로그 추가
 
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "PortOne " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -106,7 +106,10 @@ public class PaymentController {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // 요청 본문(body)에 API_SECRET 포함
-        Map<String, String> requestBody = Map.of("apiSecret", API_SECRET);
+        Map<String, String> requestBody = Map.of(
+                "apiSecret", API_SECRET
+        );
+
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
@@ -160,7 +163,7 @@ public class PaymentController {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
+        headers.set("Authorization", "PortOne " + token);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
