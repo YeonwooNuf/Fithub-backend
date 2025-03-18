@@ -44,57 +44,39 @@ public class PaymentController {
             String paymentId = (String) request.get("paymentId");
             Integer usedPoints = (Integer) request.get("usedPoints");
 
-            // ✅ usedCoupons를 JSON 문자열로 변환 (에러 해결)
-            ObjectMapper objectMapper = new ObjectMapper();
-            String usedCouponsJson = objectMapper.writeValueAsString(request.get("usedCoupons"));
-
             if (paymentId == null) {
                 return ResponseEntity.badRequest().body("❌ paymentId가 필요합니다.");
             }
 
+            // ✅ usedCoupons JSON 변환
+            String usedCouponsJson = new ObjectMapper().writeValueAsString(request.get("usedCoupons"));
             logger.info("🔍 결제 검증 요청: paymentId={}, usedPoints={}, usedCoupons={}", paymentId, usedPoints, usedCouponsJson);
 
-            // ✅ PortOne API를 사용해 결제 검증
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
+            // ✅ PortOne API에서 결제 정보 검증
             String token = getPortOneAccessToken();
-            logger.info("✅ PortOne API 요청에 사용될 액세스 토큰: {}", token); // 로그 추가
-
-            headers.set("Authorization", "PortOne " + token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(
-                    PORTONE_API_URL + paymentId,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
-
-            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
-            logger.info("✅ PortOne 응답: {}", jsonResponse);
-
-            if ("paid".equals(jsonResponse.get("status").asText())) {
-                Double amount = jsonResponse.get("totalAmount").asDouble();
-                Double finalAmount = amount - usedPoints;
-                Integer earnedPoints = (int) (finalAmount * 0.01);
-
-                User currentUser = getCurrentUser();
-                if (currentUser == null) {
-                    logger.warn("❌ 사용자 인증 실패 - 현재 사용자 정보를 가져올 수 없습니다.");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ 사용자 인증 실패");
-                }
-
-                logger.info("✅ 결제한 사용자 정보: id={}, username={}", currentUser.getUserId(), currentUser.getUsername());
-
-                // ✅ Payment 객체 저장 (usedCoupons JSON 문자열 사용)
-                Payment payment = new Payment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, "PAID", currentUser);
-                paymentRepository.save(payment);
-
-                return ResponseEntity.ok("✅ 결제 검증 완료 및 저장됨");
-            } else {
+            JsonNode paymentInfo = validatePayment(paymentId, token);
+            if (paymentInfo == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ 결제 검증 실패");
             }
+
+            // ✅ 결제 정보 추출
+            Double amount = paymentInfo.get("totalAmount").asDouble();
+            Double finalAmount = amount - usedPoints;
+            Integer earnedPoints = (int) (finalAmount * 0.01);
+
+            // ✅ 사용자 정보 조회
+            User currentUser = getCurrentUser();
+            if (currentUser == null) {
+                logger.warn("❌ 사용자 인증 실패 - 현재 사용자 정보를 가져올 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ 사용자 인증 실패");
+            }
+
+            logger.info("✅ 결제한 사용자 정보: id={}, username={}", currentUser.getUserId(), currentUser.getUsername());
+
+            // ✅ 결제 정보 저장
+            savePayment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, currentUser);
+
+            return ResponseEntity.ok("✅ 결제 검증 완료 및 저장됨");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ 서버 오류 발생: " + e.getMessage());
         }
@@ -104,17 +86,19 @@ public class PaymentController {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
 
-        // ✅ 올바른 인증 방식 적용 (Authorization 헤더 설정)
-        headers.set("Authorization", "PortOne " + API_SECRET);
+        // ✅ 올바른 인증 방식 적용 (Content-Type 설정)
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        // ✅ API Secret을 JSON 형식으로 Body에 포함
+        String requestBody = "{\"apiSecret\": \"" + API_SECRET + "\"}";
+
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            // ✅ GET 요청 방식으로 변경 (Body 없이 요청)
+            // ✅ POST 요청으로 변경
             ResponseEntity<String> response = restTemplate.exchange(
                     PORTONE_TOKEN_URL,
-                    HttpMethod.GET, // 🔥 POST → GET으로 변경
+                    HttpMethod.POST,  // 🔥 기존 GET -> POST로 변경
                     entity,
                     String.class
             );
@@ -130,9 +114,9 @@ public class PaymentController {
                 throw new RuntimeException("❌ PortOne Access Token 요청 실패: " + response.getStatusCode());
             }
 
-            JsonNode accessTokenNode = jsonResponse.get("access_token");
+            JsonNode accessTokenNode = jsonResponse.get("accessToken");
             if (accessTokenNode == null) {
-                throw new RuntimeException("❌ PortOne 응답에 access_token 필드가 없습니다: " + jsonResponse);
+                throw new RuntimeException("❌ PortOne 응답에 accessToken 필드가 없습니다: " + jsonResponse);
             }
 
             String token = accessTokenNode.asText();
@@ -163,34 +147,38 @@ public class PaymentController {
         return null;
     }
 
-    private boolean validatePortOneToken(String token, String paymentId) {
-        if (paymentId == null || paymentId.isEmpty()) {
-            logger.error("❌ 유효하지 않은 결제 ID: paymentId 값이 없습니다.");
-            return false;
-        }
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "PortOne " + token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
+    private JsonNode validatePayment(String paymentId, String token) {
         try {
-            // ✅ 토큰을 이용해 실제 결제 정보를 조회해봄 (GET 요청)
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "PortOne " + token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
             ResponseEntity<String> response = restTemplate.exchange(
-                    "https://api.portone.io/payments/" + paymentId,  // PortOne 결제 조회 API
+                    PORTONE_API_URL + paymentId,
                     HttpMethod.GET,
                     entity,
                     String.class
             );
 
-            logger.info("✅ PortOne Token 검증 응답: {}", response.getStatusCode());
-            return response.getStatusCode().is2xxSuccessful();
+            JsonNode jsonResponse = new ObjectMapper().readTree(response.getBody());
+            logger.info("✅ PortOne 응답: {}", jsonResponse);
+
+            if ("paid".equals(jsonResponse.get("status").asText())) {
+                return jsonResponse;
+            }
+            return null;
         } catch (Exception e) {
-            logger.error("❌ PortOne Token 검증 실패: {}", e.getMessage());
-            return false;
+            logger.error("❌ PortOne 결제 검증 실패: {}", e.getMessage());
+            return null;
         }
     }
 
+    private void savePayment(String paymentId, Double amount, Double finalAmount, Integer usedPoints,
+                             Integer earnedPoints, String usedCouponsJson, User currentUser) {
+        Payment payment = new Payment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, "PAID", currentUser);
+        paymentRepository.save(payment);
+        logger.info("✅ 결제 정보 저장 완료: paymentId={}", paymentId);
+    }
 }
