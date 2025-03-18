@@ -106,7 +106,7 @@ public class PaymentController {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // 요청 본문(body)에 API_SECRET 포함
-        Map<String, String> requestBody = Map.of("api_secret", API_SECRET);
+        Map<String, String> requestBody = Map.of("apiSecret", API_SECRET);
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
