@@ -103,23 +103,26 @@ public class PaymentController {
     private String getPortOneAccessToken() {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+
+        // ✅ 올바른 인증 방식 적용 (Authorization 헤더 설정)
+        headers.set("Authorization", "PortOne " + API_SECRET);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 요청 본문(body)에 API_SECRET 포함
-        Map<String, String> requestBody = Map.of(
-                "apiSecret", API_SECRET
-        );
-
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
+            // ✅ GET 요청 방식으로 변경 (Body 없이 요청)
             ResponseEntity<String> response = restTemplate.exchange(
                     PORTONE_TOKEN_URL,
-                    HttpMethod.POST,
+                    HttpMethod.GET, // 🔥 POST → GET으로 변경
                     entity,
                     String.class
             );
 
+            // 🔥 응답 로깅
+            logger.info("🔥 PortOne API 응답: {}", response.getBody());
+
+            // ✅ 응답 JSON 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonResponse = objectMapper.readTree(response.getBody());
 
@@ -127,7 +130,12 @@ public class PaymentController {
                 throw new RuntimeException("❌ PortOne Access Token 요청 실패: " + response.getStatusCode());
             }
 
-            String token = jsonResponse.get("access_token").asText();
+            JsonNode accessTokenNode = jsonResponse.get("access_token");
+            if (accessTokenNode == null) {
+                throw new RuntimeException("❌ PortOne 응답에 access_token 필드가 없습니다: " + jsonResponse);
+            }
+
+            String token = accessTokenNode.asText();
             logger.info("✅ PortOne Access Token 발급 성공: {}", token);
 
             return token;
