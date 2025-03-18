@@ -104,9 +104,10 @@ public class PaymentController {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "PortOne " + API_SECRET);  // 변경된 인증 방식
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        // 요청 본문(body)에 API_SECRET 포함
+        Map<String, String> requestBody = Map.of("api_secret", API_SECRET);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(
@@ -123,7 +124,7 @@ public class PaymentController {
                 throw new RuntimeException("❌ PortOne Access Token 요청 실패: " + response.getStatusCode());
             }
 
-            String token = jsonResponse.get("response").get("access_token").asText();
+            String token = jsonResponse.get("access_token").asText();
             logger.info("✅ PortOne Access Token 발급 성공: {}", token);
 
             return token;
