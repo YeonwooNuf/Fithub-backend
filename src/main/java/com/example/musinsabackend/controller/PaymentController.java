@@ -54,7 +54,7 @@ public class PaymentController {
 
             // ✅ PortOne API에서 결제 정보 검증
             String token = getPortOneAccessToken();
-            JsonNode paymentInfo = validatePayment(paymentId, token);
+            JsonNode paymentInfo = validatePayment(paymentId);
             if (paymentInfo == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ 결제 검증 실패");
             }
@@ -147,11 +147,11 @@ public class PaymentController {
         return null;
     }
 
-    private JsonNode validatePayment(String paymentId, String token) {
+    private JsonNode validatePayment(String paymentId) {
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "PortOne " + token);
+            headers.set("Authorization", "PortOne " + API_SECRET);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -163,11 +163,21 @@ public class PaymentController {
             );
 
             JsonNode jsonResponse = new ObjectMapper().readTree(response.getBody());
-            logger.info("✅ PortOne 응답: {}", jsonResponse);
+            logger.info("✅ PortOne 응답 데이터: {}", jsonResponse);  // 🔥 전체 응답 JSON 로깅
 
-            if ("paid".equals(jsonResponse.get("status").asText())) {
+            // ✅ 상태값 확인 (값이 존재하는지 체크)
+            if (jsonResponse == null || !jsonResponse.has("status")) {
+                logger.warn("❌ PortOne 응답에서 'status' 필드를 찾을 수 없음: {}", jsonResponse);
+                return null;
+            }
+
+            String paymentStatus = jsonResponse.get("status").asText();
+            logger.info("✅ PortOne 결제 상태: {}", paymentStatus);  // 🔥 상태 값 로깅
+
+            if ("PAID".equalsIgnoreCase(jsonResponse.get("status").asText())) {  // ✅ 대소문자 구분 없이 비교
                 return jsonResponse;
             }
+            logger.warn("❌ 결제 상태가 'PAID'가 아님: {}", paymentStatus);
             return null;
         } catch (Exception e) {
             logger.error("❌ PortOne 결제 검증 실패: {}", e.getMessage());
