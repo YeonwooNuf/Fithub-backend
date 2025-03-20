@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -45,7 +46,7 @@ public class PaymentController {
             Integer usedPoints = (Integer) request.get("usedPoints");
 
             if (paymentId == null) {
-                return ResponseEntity.badRequest().body("❌ paymentId가 필요합니다.");
+                return ResponseEntity.badRequest().body(Map.of("error", "❌ paymentId가 필요합니다."));
             }
 
             // ✅ usedCoupons JSON 변환
@@ -56,7 +57,7 @@ public class PaymentController {
             String token = getPortOneAccessToken();
             JsonNode paymentInfo = validatePayment(paymentId);
             if (paymentInfo == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ 결제 검증 실패");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "❌ 결제 검증 실패"));
             }
 
             // ✅ 결제 정보 추출
@@ -68,7 +69,7 @@ public class PaymentController {
             User currentUser = getCurrentUser();
             if (currentUser == null) {
                 logger.warn("❌ 사용자 인증 실패 - 현재 사용자 정보를 가져올 수 없습니다.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ 사용자 인증 실패");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "❌ 사용자 인증 실패"));
             }
 
             logger.info("✅ 결제한 사용자 정보: id={}, username={}", currentUser.getUserId(), currentUser.getUsername());
@@ -76,9 +77,21 @@ public class PaymentController {
             // ✅ 결제 정보 저장
             savePayment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, currentUser);
 
-            return ResponseEntity.ok("✅ 결제 검증 완료 및 저장됨");
+            // ✅ JSON 응답 반환
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "✅ 결제 검증 완료 및 저장됨");
+            response.put("paymentId", paymentId);
+            response.put("usedPoints", usedPoints);
+            response.put("finalAmount", finalAmount);
+            response.put("earnedPoints", earnedPoints);
+            response.put("usedCoupons", request.get("usedCoupons"));
+
+            return ResponseEntity.ok(response); // ✅ JSON 응답 반환
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ 서버 오류 발생: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "❌ 서버 오류 발생");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
