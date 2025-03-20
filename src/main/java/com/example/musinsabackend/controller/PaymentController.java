@@ -61,8 +61,9 @@ public class PaymentController {
             }
 
             // ✅ 결제 정보 추출
-            Double amount = paymentInfo.get("amount").get("total").asDouble();
-            Double finalAmount = amount - usedPoints;
+            Double totalAmount = paymentInfo.get("amount").get("paid").asDouble(); // ✅ 결제 전 가격 (할인 전)
+            Double finalAmount = totalAmount - usedPoints;
+
             Integer earnedPoints = (int) (finalAmount * 0.01);
 
             // ✅ 사용자 정보 조회
@@ -75,7 +76,7 @@ public class PaymentController {
             logger.info("✅ 결제한 사용자 정보: id={}, username={}", currentUser.getUserId(), currentUser.getUsername());
 
             // ✅ 결제 정보 저장
-            savePayment(paymentId, amount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, currentUser);
+            savePayment(paymentId, totalAmount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, currentUser);
 
             // ✅ JSON 응답 반환
             Map<String, Object> response = new HashMap<>();
