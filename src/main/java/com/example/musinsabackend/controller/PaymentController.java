@@ -60,7 +60,7 @@ public class PaymentController {
             }
 
             // ✅ 결제 정보 추출
-            Double amount = paymentInfo.get("totalAmount").asDouble();
+            Double amount = paymentInfo.get("amount").get("total").asDouble();
             Double finalAmount = amount - usedPoints;
             Integer earnedPoints = (int) (finalAmount * 0.01);
 
