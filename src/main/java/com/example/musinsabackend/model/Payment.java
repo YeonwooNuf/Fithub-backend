@@ -26,7 +26,8 @@ public class Payment {
     @Column(nullable = false)
     private Integer earnedPoints; // 결제 적립 포인트 (최종 결제 금액 * 1%)
 
-    @Column(nullable = false)
+    @Lob
+    @Column(columnDefinition = "TEXT") // ✅ JSON 데이터 저장
     private String usedCoupons; // 사용한 쿠폰 정보 (JSON 저장)
 
     @Column(nullable = false)
