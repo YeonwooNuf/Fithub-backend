@@ -44,6 +44,8 @@ public class PaymentController {
         try {
             String paymentId = (String) request.get("paymentId");
             Integer usedPoints = (Integer) request.get("usedPoints");
+            Double finalAmount = (Double) request.get("finalAmount");
+            Double totalAmount = (Double) request.get("totalAmount"); // ✅ 프론트에서 전달된 원래 가격
 
             if (paymentId == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "❌ paymentId가 필요합니다."));
@@ -60,14 +62,10 @@ public class PaymentController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "❌ 결제 검증 실패"));
             }
 
-            // ✅ 결제 정보 추출
             // ✅ PortOne에서 받은 최종 결제 금액 (쿠폰 & 포인트 적용 후)
-            Double finalAmount = paymentInfo.get("amount").get("paid").asDouble();
+            Double paidAmount = paymentInfo.get("amount").get("paid").asDouble(); // ✅ 포트원 결제 금액
 
-            // ✅ 원래 상품 가격의 총합 (쿠폰 & 포인트 적용 전)
-            Double totalAmount = paymentInfo.get("amount").get("supply").asDouble();
-
-            Integer earnedPoints = (int) (finalAmount * 0.05);
+            Integer earnedPoints = (int) (paidAmount * 0.05);
 
             // ✅ 사용자 정보 조회
             User currentUser = getCurrentUser();
