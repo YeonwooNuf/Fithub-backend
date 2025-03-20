@@ -44,8 +44,14 @@ public class PaymentController {
         try {
             String paymentId = (String) request.get("paymentId");
             Integer usedPoints = (Integer) request.get("usedPoints");
-            Double finalAmount = (Double) request.get("finalAmount");
-            Double totalAmount = (Double) request.get("totalAmount"); // ✅ 프론트에서 전달된 원래 가격
+
+            // ✅ `totalAmount`, `finalAmount`를 `Number` 타입으로 먼저 받기
+            Number totalAmountNumber = (Number) request.get("totalAmount");
+            Number finalAmountNumber = (Number) request.get("finalAmount");
+
+            // ✅ `Double`로 변환
+            Double totalAmount = totalAmountNumber.doubleValue();   // 할인 전 금액
+            Double finalAmount = finalAmountNumber.doubleValue();   // 할인 후 최종 결제 금액
 
             if (paymentId == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "❌ paymentId가 필요합니다."));
