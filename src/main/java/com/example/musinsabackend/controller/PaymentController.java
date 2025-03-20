@@ -61,10 +61,13 @@ public class PaymentController {
             }
 
             // ✅ 결제 정보 추출
-            Double totalAmount = paymentInfo.get("amount").get("paid").asDouble(); // ✅ 결제 전 가격 (할인 전)
-            Double finalAmount = totalAmount - usedPoints;
+            // ✅ PortOne에서 받은 최종 결제 금액 (쿠폰 & 포인트 적용 후)
+            Double finalAmount = paymentInfo.get("amount").get("paid").asDouble();
 
-            Integer earnedPoints = (int) (finalAmount * 0.01);
+            // ✅ 원래 상품 가격의 총합 (쿠폰 & 포인트 적용 전)
+            Double totalAmount = paymentInfo.get("amount").get("supply").asDouble();
+
+            Integer earnedPoints = (int) (finalAmount * 0.05);
 
             // ✅ 사용자 정보 조회
             User currentUser = getCurrentUser();
