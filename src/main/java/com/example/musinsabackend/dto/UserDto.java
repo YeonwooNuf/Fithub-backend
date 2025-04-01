@@ -28,6 +28,10 @@ public class UserDto {
     private List<CouponDto> coupons;
     private List<PointDto> points;
 
+    // 기본 생성자 추가
+    public UserDto() {
+    }
+
     // ✅ User 엔티티 → UserDto 변환하는 생성자 추가
     public UserDto(User user) {
         this.userId = user.getUserId();
