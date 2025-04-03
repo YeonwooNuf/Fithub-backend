@@ -53,4 +53,10 @@ public class Order {
             inverseJoinColumns = @JoinColumn(name = "coupon_id")
     )
     private List<Coupon> usedCoupons = new ArrayList<>();
+
+    // 편의 메서드
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
 }
