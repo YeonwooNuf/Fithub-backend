@@ -86,6 +86,7 @@ public class UserController {
                     "success", true,
                     "userId", user.getUserId(),
                     "username", user.getUsername(),
+                    "phone", user.getPhone(),
                     "nickname", user.getNickname(),
                     "unusedCoupons", couponCount,       // 사용하지 않은 쿠폰 개수
                     "totalPoints", user.getPoints(),    // 적립금
