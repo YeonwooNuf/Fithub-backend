@@ -93,6 +93,7 @@ public class PaymentController {
             response.put("finalAmount", finalAmount);
             response.put("earnedPoints", earnedPoints);
             response.put("usedCoupons", request.get("usedCoupons"));
+            response.put("totalAmount", totalAmount);
 
             return ResponseEntity.ok(response); // ✅ JSON 응답 반환
         } catch (Exception e) {
