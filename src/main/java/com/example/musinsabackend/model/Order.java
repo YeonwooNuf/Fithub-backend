@@ -1,102 +1,56 @@
 package com.example.musinsabackend.model;
 
+import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 주문 ID
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user; // 주문한 사용자
+    private String paymentId;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product; // 주문한 상품
+    private int totalAmount;
 
-    @Column(nullable = false)
-    private Integer quantity; // 구매 수량
+    private int finalAmount;
 
-    @Column(nullable = false)
-    private Double totalPrice; // 총 가격
+    private int usedPoints;
 
-    @Column(nullable = false)
-    private LocalDateTime orderDate; // 주문 날짜
+    private LocalDateTime orderDate;
 
-    @Column(nullable = true)
-    private String paymentKey; // 결제 키값 (외부 결제 API 연동용)
+    // 🔗 주문자 정보
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status; // 주문 상태 (PENDING, COMPLETED, CANCELLED 등)
+    // 🔗 배송지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
-    // Getter와 Setter
-    public Long getId() {
-        return id;
-    }
+    // 🔗 주문에 포함된 상품들
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public Double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public String getPaymentKey() {
-        return paymentKey;
-    }
-
-    public void setPaymentKey(String paymentKey) {
-        this.paymentKey = paymentKey;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
+    // 🔗 사용된 쿠폰들 (필요한 경우)
+    @ManyToMany
+    @JoinTable(
+            name = "order_used_coupons",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "coupon_id")
+    )
+    private List<Coupon> usedCoupons = new ArrayList<>();
 }
