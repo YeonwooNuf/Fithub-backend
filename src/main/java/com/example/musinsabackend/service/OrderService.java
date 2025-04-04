@@ -88,14 +88,13 @@ public class OrderService {
         return orders.stream().map(order -> {
             List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
                 Product product = item.getProduct();
-                boolean reviewExists = reviewRepository.existsByUserIdAndProductId(userId, product.getId());
 
                 OrderItemDto itemDto = new OrderItemDto();
                 itemDto.setProductId(product.getId());
                 itemDto.setProductName(product.getName());
                 itemDto.setPrice(item.getPrice());
                 itemDto.setQuantity(item.getQuantity());
-                itemDto.setReviewWritten(reviewExists);
+                itemDto.setReviewWritten(false); // ✅ 리뷰 구현 전까지는 false로 고정
 
                 return itemDto;
             }).toList();
