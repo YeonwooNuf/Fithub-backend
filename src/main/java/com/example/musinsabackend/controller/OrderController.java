@@ -32,4 +32,18 @@ public class OrderController {
         orderService.saveOrder(orderRequestDto, userId);
         return ResponseEntity.ok("주문 저장 완료");
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getOrderHistory(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body("인증된 사용자 정보가 없습니다.");
+        }
+
+        return ResponseEntity.ok(
+                // 주문 목록을 orderService에서 받아서 반환
+                // 예: List<OrderResponseDto>
+                orderService.getOrdersByUser(userId)
+        );
+    }
 }
