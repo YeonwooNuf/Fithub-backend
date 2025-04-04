@@ -1,5 +1,6 @@
 package com.example.musinsabackend.service;
 
+import com.example.musinsabackend.dto.OrderDto;
 import com.example.musinsabackend.dto.OrderItemDto;
 import com.example.musinsabackend.dto.OrderRequestDto;
 import com.example.musinsabackend.model.*;
@@ -79,5 +80,36 @@ public class OrderService {
 
         // 저장 (OrderItem도 cascade로 같이 저장됨)
         orderRepository.save(order);
+    }
+
+    public List<OrderDto> getOrdersByUser(Long userId) {
+        List<Order> orders = orderRepository.findByUser_UserId(userId);
+
+        return orders.stream().map(order -> {
+            List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
+                Product product = item.getProduct();
+                boolean reviewExists = reviewRepository.existsByUserIdAndProductId(userId, product.getId());
+
+                OrderItemDto itemDto = new OrderItemDto();
+                itemDto.setProductId(product.getId());
+                itemDto.setProductName(product.getName());
+                itemDto.setPrice(item.getPrice());
+                itemDto.setQuantity(item.getQuantity());
+                itemDto.setReviewWritten(reviewExists);
+
+                return itemDto;
+            }).toList();
+
+            OrderDto dto = new OrderDto();
+            dto.setOrderId(order.getId());
+            dto.setPaymentId(order.getPaymentId());
+            dto.setTotalAmount(order.getTotalAmount());
+            dto.setFinalAmount(order.getFinalAmount());
+            dto.setUsedPoints(order.getUsedPoints());
+            dto.setOrderDate(order.getOrderDate().toString());
+            dto.setItems(itemDtos);
+
+            return dto;
+        }).toList();
     }
 }
