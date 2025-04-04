@@ -8,6 +8,7 @@ import lombok.Setter;
 public class OrderItemDto {
     private Long productId;
     private String productName;
+    private String productImage;
     private int quantity;
     private int price;
     private boolean reviewWritten; // ✅ 리뷰 작성 여부
