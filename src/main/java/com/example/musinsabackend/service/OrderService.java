@@ -96,6 +96,13 @@ public class OrderService {
                 itemDto.setQuantity(item.getQuantity());
                 itemDto.setReviewWritten(false); // ✅ 리뷰 구현 전까지는 false로 고정
 
+                // ✅ 썸네일 지정: 이미지가 있다면 첫 번째 것, 없다면 기본 이미지
+                if (product.getImages() != null && !product.getImages().isEmpty()) {
+                    itemDto.setProductImage(product.getImages().get(0)); // ✅ 첫 번째 이미지 URL
+                } else {
+                    itemDto.setProductImage("/uploads/cloth-images/default.jpg"); // ✅ 기본 이미지
+                }
+
                 return itemDto;
             }).toList();
 
