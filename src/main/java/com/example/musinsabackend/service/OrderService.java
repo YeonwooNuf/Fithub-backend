@@ -1,8 +1,6 @@
 package com.example.musinsabackend.service;
 
-import com.example.musinsabackend.dto.OrderDto;
-import com.example.musinsabackend.dto.OrderItemDto;
-import com.example.musinsabackend.dto.OrderRequestDto;
+import com.example.musinsabackend.dto.*;
 import com.example.musinsabackend.model.*;
 import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.coupon.UserCoupon;
@@ -30,20 +28,16 @@ public class OrderService {
 
     @Transactional
     public void saveOrder(OrderRequestDto dto, Long userId) {
-
         if (orderRepository.existsByPaymentId(dto.getPaymentId())) {
             throw new IllegalStateException("이미 저장된 결제입니다.");
         }
 
-        // 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 배송지 조회
         Address address = addressRepository.findById(dto.getAddressId())
                 .orElseThrow(() -> new IllegalArgumentException("배송지를 찾을 수 없습니다."));
 
-        // 주문 생성
         Order order = Order.builder()
                 .paymentId(dto.getPaymentId())
                 .totalAmount(dto.getTotalAmount())
@@ -54,7 +48,6 @@ public class OrderService {
                 .address(address)
                 .build();
 
-        // 주문 상품(OrderItem) 생성 및 연결
         for (OrderItemDto itemDto : dto.getItems()) {
             Product product = productRepository.findById(itemDto.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
@@ -66,19 +59,17 @@ public class OrderService {
                     .order(order)
                     .build();
 
-            order.addOrderItem(orderItem); // 편의 메서드로 양방향 연결
+            order.addOrderItem(orderItem);
         }
 
-        // 쿠폰 연결 (ManyToMany)
+        // ✅ 쿠폰 연결 (중간 테이블 저장용)
         if (dto.getUsedCouponIds() != null && !dto.getUsedCouponIds().isEmpty()) {
             List<UserCoupon> userCoupons = couponRepository.findAllById(dto.getUsedCouponIds());
-            List<Coupon> coupons = userCoupons.stream()
-                    .map(UserCoupon::getCoupon)
-                    .toList();
-            order.setUsedCoupons(userCoupons);
+            for (UserCoupon userCoupon : userCoupons) {
+                order.addUsedCoupon(userCoupon); // ✅ 편의 메서드로 추가
+            }
         }
 
-        // 저장 (OrderItem도 cascade로 같이 저장됨)
         orderRepository.save(order);
     }
 
@@ -117,5 +108,46 @@ public class OrderService {
 
             return dto;
         }).toList();
+    }
+
+    public OrderDto getOrderDetail(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        if (!order.getUser().getUserId().equals(userId)) {
+            throw new SecurityException("해당 주문에 접근할 수 없습니다.");
+        }
+
+        OrderDto dto = new OrderDto();
+        dto.setOrderId(order.getId());
+        dto.setPaymentId(order.getPaymentId());
+        dto.setTotalAmount(order.getTotalAmount());
+        dto.setFinalAmount(order.getFinalAmount());
+        dto.setUsedPoints(order.getUsedPoints());
+        dto.setOrderDate(order.getOrderDate().toString());
+
+        // 배송지
+        dto.setAddress(new AddressDto(order.getAddress()));
+
+        // 쿠폰
+        List<UserCouponDto> userCouponDtos = order.getUsedCoupons().stream()
+                .map(UserCouponDto::new)
+                .toList();
+        dto.setUsedCoupons(userCouponDtos);
+
+        // 상품
+        List<OrderItemDto> itemDtos = order.getOrderItems().stream()
+                .map(item -> {
+                    OrderItemDto d = new OrderItemDto();
+                    d.setProductId(item.getProduct().getId());
+                    d.setProductName(item.getProduct().getName());
+                    d.setPrice(item.getPrice());
+                    d.setQuantity(item.getQuantity());
+                    return d;
+                })
+                .toList();
+        dto.setItems(itemDtos);
+
+        return dto;
     }
 }
