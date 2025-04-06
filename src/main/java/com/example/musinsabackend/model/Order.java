@@ -52,7 +52,7 @@ public class Order {
     @Builder.Default
     @ManyToMany
     @JoinTable(
-            name = "order_used_user_coupons", // ✅ 테이블 이름 명시
+            name = "order_used_user_coupons",
             joinColumns = @JoinColumn(name = "order_id"),
             inverseJoinColumns = @JoinColumn(name = "user_coupon_id")
     )
@@ -62,5 +62,9 @@ public class Order {
     public void addOrderItem(OrderItem item) {
         orderItems.add(item);
         item.setOrder(this);
+    }
+
+    public void addUsedCoupon(UserCoupon coupon) {
+        this.usedCoupons.add(coupon);
     }
 }
