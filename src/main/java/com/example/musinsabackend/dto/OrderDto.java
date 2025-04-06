@@ -13,5 +13,8 @@ public class OrderDto {
     private int finalAmount;
     private int usedPoints;
     private String orderDate;
-    private List<OrderItemDto> items; // ✅ 외부 DTO로 분리
+
+    private AddressDto address;
+    private List<UserCouponDto> usedCoupons;
+    private List<OrderItemDto> items;
 }
