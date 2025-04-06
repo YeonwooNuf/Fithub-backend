@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/users/login", "/api/users/register").permitAll() // ✅ 인증 없이 허용
-                        .requestMatchers(HttpMethod.GET, "/uploads/**","/api/users/home","/api/products","api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**","/api/users/home","/api/products","/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/events/**", "/api/users/mypage", "/api/cart/**","/api/payment/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/users/addresses").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
