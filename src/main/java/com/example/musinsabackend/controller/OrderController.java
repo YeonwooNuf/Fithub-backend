@@ -31,9 +31,15 @@ public class OrderController {
             return ResponseEntity.status(401).body("인증된 사용자 정보가 없습니다.");
         }
 
-
         orderService.saveOrder(orderRequestDto, userId);
         return ResponseEntity.ok("주문 저장 완료");
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrderDetail(@PathVariable Long orderId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        OrderDto orderDto = orderService.getOrderDetail(orderId, userId);
+        return ResponseEntity.ok(orderDto);
     }
 
     @GetMapping("/history")
