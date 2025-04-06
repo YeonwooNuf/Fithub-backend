@@ -9,6 +9,7 @@ import com.example.musinsabackend.repository.*;
 import com.example.musinsabackend.repository.user.AddressRepository;
 import com.example.musinsabackend.repository.user.CouponRepository;
 import com.example.musinsabackend.repository.user.ProductRepository;
+import com.example.musinsabackend.repository.user.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
+    private final UserCouponRepository userCouponRepository;
 
     @Transactional
     public void saveOrder(OrderRequestDto dto, Long userId) {
@@ -64,7 +66,7 @@ public class OrderService {
 
         // ✅ 쿠폰 연결 (중간 테이블 저장용)
         if (dto.getUsedCouponIds() != null && !dto.getUsedCouponIds().isEmpty()) {
-            List<UserCoupon> userCoupons = couponRepository.findAllById(dto.getUsedCouponIds());
+            List<UserCoupon> userCoupons = userCouponRepository.findAllByIdIn(dto.getUsedCouponIds());
             for (UserCoupon userCoupon : userCoupons) {
                 order.addUsedCoupon(userCoupon); // ✅ 편의 메서드로 추가
             }
