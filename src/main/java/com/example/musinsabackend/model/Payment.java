@@ -2,9 +2,14 @@ package com.example.musinsabackend.model;
 
 import com.example.musinsabackend.model.user.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@Setter
 public class Payment {
 
     @Id
@@ -27,7 +32,7 @@ public class Payment {
     private Integer earnedPoints; // 결제 적립 포인트 (최종 결제 금액 * 1%)
 
     @Lob
-    @Column(columnDefinition = "TEXT") // ✅ JSON 데이터 저장
+    @Column(columnDefinition = "TEXT")
     private String usedCoupons; // 사용한 쿠폰 정보 (JSON 저장)
 
     @Column(nullable = false)
@@ -40,8 +45,10 @@ public class Payment {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt; // 결제 일시
 
+    // 기본 생성자
     public Payment() {}
 
+    // 전체 필드를 초기화하는 생성자
     public Payment(String paymentId, Double totalAmount, Double finalAmount, Integer usedPoints, Integer earnedPoints,
                    String usedCoupons, String status, User user) {
         this.paymentId = paymentId;
@@ -55,24 +62,26 @@ public class Payment {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ✅ Getter & Setter
-    public Long getId() { return id; }
-    public String getPaymentId() { return paymentId; }
-    public Double getTotalAmount() { return totalAmount; }
-    public Double getFinalAmount() { return finalAmount; }
-    public Integer getUsedPoints() { return usedPoints; }
-    public Integer getEarnedPoints() { return earnedPoints; }
-    public String getUsedCoupons() { return usedCoupons; }
-    public String getStatus() { return status; }
-    public User getUser() { return user; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    // ✅ 저장 전 createdAt 및 누락 방지용 기본값 세팅
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.status == null) this.status = "PAID";
+        if (this.earnedPoints == null) this.earnedPoints = 0;
+    }
 
-    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
-    public void settotalAmount(Double amount) { this.totalAmount = amount; }
-    public void setFinalAmount(Double finalAmount) { this.finalAmount = finalAmount; }
-    public void setUsedPoints(Integer usedPoints) { this.usedPoints = usedPoints; }
-    public void setEarnedPoints(Integer earnedPoints) { this.earnedPoints = earnedPoints; }
-    public void setUsedCoupons(String usedCoupons) { this.usedCoupons = usedCoupons; }
-    public void setStatus(String status) { this.status = status; }
-    public void setUser(User user) { this.user = user; }
+    // ✅ 디버깅을 위한 toString
+    @Override
+    public String toString() {
+        return "Payment{" +
+                "paymentId='" + paymentId + '\'' +
+                ", totalAmount=" + totalAmount +
+                ", finalAmount=" + finalAmount +
+                ", usedPoints=" + usedPoints +
+                ", earnedPoints=" + earnedPoints +
+                ", usedCoupons='" + usedCoupons + '\'' +
+                ", status='" + status + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }
