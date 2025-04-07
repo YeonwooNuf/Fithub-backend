@@ -1,9 +1,11 @@
 package com.example.musinsabackend.controller;
 
+import com.example.musinsabackend.dto.OrderRequestDto;
 import com.example.musinsabackend.model.Payment;
 import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.PaymentRepository;
 import com.example.musinsabackend.repository.UserRepository;
+import com.example.musinsabackend.service.OrderService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -32,10 +34,12 @@ public class PaymentController {
 
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final OrderService orderService;
 
-    public PaymentController(PaymentRepository paymentRepository, UserRepository userRepository) {
+    public PaymentController(PaymentRepository paymentRepository, UserRepository userRepository, OrderService orderService) {
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
+        this.orderService = orderService;
     }
 
     @Transactional
@@ -84,6 +88,11 @@ public class PaymentController {
 
             // ✅ 결제 정보 저장
             savePayment(paymentId, totalAmount, finalAmount, usedPoints, earnedPoints, usedCouponsJson, currentUser);
+
+            // ✅ Order 저장
+            OrderRequestDto orderRequestDto = new ObjectMapper().convertValue(request, OrderRequestDto.class);
+            orderService.saveOrder(orderRequestDto, currentUser.getUserId());
+            logger.info("✅ 주문 정보 저장 완료: paymentId={}", paymentId);
 
             // ✅ JSON 응답 반환
             Map<String, Object> response = new HashMap<>();
