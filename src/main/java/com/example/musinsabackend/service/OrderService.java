@@ -2,7 +2,6 @@ package com.example.musinsabackend.service;
 
 import com.example.musinsabackend.dto.*;
 import com.example.musinsabackend.model.*;
-import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.coupon.UserCoupon;
 import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.*;
@@ -28,8 +27,11 @@ public class OrderService {
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
 
+    /**
+     * ✅ 주문 저장 후 OrderDto 반환
+     */
     @Transactional
-    public void saveOrder(OrderRequestDto dto, Long userId) {
+    public OrderDto saveOrder(OrderRequestDto dto, Long userId) {
         if (orderRepository.existsByPaymentId(dto.getPaymentId())) {
             throw new IllegalStateException("이미 저장된 결제입니다.");
         }
@@ -64,15 +66,18 @@ public class OrderService {
             order.addOrderItem(orderItem);
         }
 
-        // ✅ 쿠폰 연결 (중간 테이블 저장용)
+        // ✅ 쿠폰 연결 (중간 테이블 저장)
         if (dto.getUsedCouponIds() != null && !dto.getUsedCouponIds().isEmpty()) {
             List<UserCoupon> userCoupons = userCouponRepository.findAllByIdIn(dto.getUsedCouponIds());
             for (UserCoupon userCoupon : userCoupons) {
-                order.addUsedCoupon(userCoupon); // ✅ 편의 메서드로 추가
+                order.addUsedCoupon(userCoupon);
             }
         }
 
         orderRepository.save(order);
+
+        // ✅ 저장된 주문 상세 정보를 반환
+        return getOrderDetail(order.getId(), userId);
     }
 
     public List<OrderDto> getOrdersByUser(Long userId) {
@@ -87,13 +92,12 @@ public class OrderService {
                 itemDto.setProductName(product.getName());
                 itemDto.setPrice(item.getPrice());
                 itemDto.setQuantity(item.getQuantity());
-                itemDto.setReviewWritten(false); // ✅ 리뷰 구현 전까지는 false로 고정
+                itemDto.setReviewWritten(false);
 
-                // ✅ 썸네일 지정: 이미지가 있다면 첫 번째 것, 없다면 기본 이미지
                 if (product.getImages() != null && !product.getImages().isEmpty()) {
-                    itemDto.setProductImage(product.getImages().get(0)); // ✅ 첫 번째 이미지 URL
+                    itemDto.setProductImage(product.getImages().get(0));
                 } else {
-                    itemDto.setProductImage("/uploads/cloth-images/default.jpg"); // ✅ 기본 이미지
+                    itemDto.setProductImage("/uploads/cloth-images/default.jpg");
                 }
 
                 return itemDto;
@@ -128,16 +132,16 @@ public class OrderService {
         dto.setUsedPoints(order.getUsedPoints());
         dto.setOrderDate(order.getOrderDate().toString());
 
-        // 배송지
+        // ✅ 배송지 정보
         dto.setAddress(new AddressDto(order.getAddress()));
 
-        // 쿠폰
+        // ✅ 사용한 쿠폰 정보
         List<UserCouponDto> userCouponDtos = order.getUsedCoupons().stream()
                 .map(UserCouponDto::new)
                 .toList();
         dto.setUsedCoupons(userCouponDtos);
 
-        // 상품
+        // ✅ 상품 정보
         List<OrderItemDto> itemDtos = order.getOrderItems().stream()
                 .map(item -> {
                     OrderItemDto d = new OrderItemDto();
