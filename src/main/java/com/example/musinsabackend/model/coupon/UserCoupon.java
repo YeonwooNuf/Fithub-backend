@@ -2,9 +2,14 @@ package com.example.musinsabackend.model.coupon;
 
 import com.example.musinsabackend.model.user.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
 @Entity
+@Getter
+@Setter
 public class UserCoupon {
 
     @Id
@@ -35,23 +40,4 @@ public class UserCoupon {
             issuedDate = LocalDate.now();
         }
     }
-
-    // Getter & Setter
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public Coupon getCoupon() { return coupon; }
-    public void setCoupon(Coupon coupon) { this.coupon = coupon; }
-
-    public boolean isUsed() { return isUsed; }
-    public void setUsed(boolean used) { isUsed = used; }
-
-    public LocalDate getIssuedDate() { return issuedDate; }
-    public void setIssuedDate(LocalDate issuedDate) { this.issuedDate = issuedDate; }
-
-    public LocalDate getExpiryDate() { return expiryDate; }
-    public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
 }
