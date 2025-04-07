@@ -19,22 +19,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping
-    public ResponseEntity<?> createOrder(
-            @RequestBody OrderRequestDto orderRequestDto,
-            HttpServletRequest request
-    ) {
-        // ✅ 필터에서 저장한 userId 추출
-        Long userId = (Long) request.getAttribute("userId");
-
-        if (userId == null) {
-            return ResponseEntity.status(401).body("인증된 사용자 정보가 없습니다.");
-        }
-
-        orderService.saveOrder(orderRequestDto, userId);
-        return ResponseEntity.ok("주문 저장 완료");
-    }
-
     @GetMapping("/{orderId}")
     public ResponseEntity<?> getOrderDetail(@PathVariable Long orderId, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
