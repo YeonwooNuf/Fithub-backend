@@ -60,6 +60,8 @@ public class OrderService {
                     .product(product)
                     .quantity(itemDto.getQuantity())
                     .price(itemDto.getPrice())
+                    .color(itemDto.getColor())
+                    .size(itemDto.getSize())
                     .order(order)
                     .build();
 

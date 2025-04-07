@@ -12,4 +12,6 @@ public class OrderItemDto {
     private int quantity;
     private int price;
     private boolean reviewWritten; // ✅ 리뷰 작성 여부
+    private String color;
+    private String size;
 }
