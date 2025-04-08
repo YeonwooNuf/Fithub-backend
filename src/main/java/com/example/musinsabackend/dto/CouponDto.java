@@ -3,9 +3,14 @@ package com.example.musinsabackend.dto;
 import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.coupon.CouponDistributionType;
 import com.example.musinsabackend.model.coupon.CouponTarget;
+import com.example.musinsabackend.model.coupon.UserCoupon;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class CouponDto {
     private Long id;
     private String name;                 // 쿠폰명
@@ -19,6 +24,8 @@ public class CouponDto {
     private String targetValue;          // 브랜드명 또는 카테고리명
     private CouponDistributionType distributionType; // 지급 방식 (자동/수동)
     private String couponCode;           // 수동 쿠폰의 경우 쿠폰 코드
+
+    private Long userCouponId;           // 사용자 쿠폰 ID
 
     public CouponDto() {}
 
@@ -55,43 +62,6 @@ public class CouponDto {
         this.couponCode = couponCode;
     }
 
-    // Getter & Setter
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public int getDiscount() { return discount; }
-    public void setDiscount(int discount) { this.discount = discount; }
-
-    public int getMaxDiscountAmount() { return maxDiscountAmount; }
-    public void setMaxDiscountAmount(int maxDiscountAmount) { this.maxDiscountAmount = maxDiscountAmount; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public LocalDate getIssuedDate() { return issuedDate; }
-    public void setIssuedDate(LocalDate issuedDate) { this.issuedDate = issuedDate; }
-
-    public LocalDate getExpiryDate() { return expiryDate; }
-    public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
-
-    public boolean isUsed() { return isUsed; }
-    public void setUsed(boolean used) { isUsed = used; }
-
-    public CouponTarget getTarget() { return target; }
-    public void setTarget(CouponTarget target) { this.target = target; }
-
-    public String getTargetValue() { return targetValue; }
-    public void setTargetValue(String targetValue) { this.targetValue = targetValue; }
-
-    public CouponDistributionType getDistributionType() { return distributionType; }
-    public void setDistributionType(CouponDistributionType distributionType) { this.distributionType = distributionType; }
-
-    public String getCouponCode() { return couponCode; }
-    public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
-
     public static CouponDto fromEntity(Coupon coupon) {
         return new CouponDto(
                 coupon.getId(),
@@ -107,6 +77,28 @@ public class CouponDto {
                 coupon.getDistributionType(),
                 coupon.getCouponCode()
         );
+    }
+
+    public static CouponDto fromUserCoupon(UserCoupon userCoupon) {
+        Coupon coupon = userCoupon.getCoupon();
+
+        CouponDto dto = new CouponDto(
+                coupon.getId(),
+                coupon.getName(),
+                coupon.getDiscount(),
+                coupon.getMaxDiscountAmount(),
+                coupon.getDescription(),
+                userCoupon.getIssuedDate(),
+                userCoupon.getExpiryDate(),
+                userCoupon.isUsed(),
+                coupon.getTarget(),
+                coupon.getTargetValue(),
+                coupon.getDistributionType(),
+                coupon.getCouponCode()
+        );
+
+        dto.setUserCouponId(userCoupon.getId());  // ✅ 핵심
+        return dto;
     }
 
 }
