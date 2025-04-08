@@ -71,12 +71,20 @@ public class OrderService {
         // ✅ 쿠폰 연결 (중간 테이블 저장)
         if (dto.getUsedCouponIds() != null && !dto.getUsedCouponIds().isEmpty()) {
             List<UserCoupon> userCoupons = userCouponRepository.findAllByIdIn(dto.getUsedCouponIds());
+
+            System.out.println("🟡 [DEBUG] 조회된 쿠폰 개수: " + userCoupons.size());
             for (UserCoupon userCoupon : userCoupons) {
+                System.out.println("🔹 쿠폰 ID: " + userCoupon.getId() + ", isUsed: " + userCoupon.isUsed());
                 order.addUsedCoupon(userCoupon);
             }
+
+            System.out.println("🟢 [DEBUG] 주문에 추가된 쿠폰 수: " + order.getUsedCoupons().size());
         }
 
         orderRepository.save(order);
+        orderRepository.flush(); // 📬 DB에 즉시 반영
+
+        System.out.println("📬 [DEBUG] 주문 저장 및 flush 완료");
 
         // ✅ 저장된 주문 상세 정보를 반환
         return getOrderDetail(order.getId(), userId);
@@ -119,12 +127,14 @@ public class OrderService {
     }
 
     public OrderDto getOrderDetail(Long orderId, Long userId) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findWithCouponsById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
 
         if (!order.getUser().getUserId().equals(userId)) {
             throw new SecurityException("해당 주문에 접근할 수 없습니다.");
         }
+
+        System.out.println("📦 [DEBUG] 저장된 주문의 쿠폰 개수: " + order.getUsedCoupons().size());
 
         OrderDto dto = new OrderDto();
         dto.setOrderId(order.getId());
@@ -146,14 +156,27 @@ public class OrderService {
         // ✅ 상품 정보
         List<OrderItemDto> itemDtos = order.getOrderItems().stream()
                 .map(item -> {
+                    Product product = item.getProduct();
+
                     OrderItemDto d = new OrderItemDto();
-                    d.setProductId(item.getProduct().getId());
-                    d.setProductName(item.getProduct().getName());
+                    d.setProductId(product.getId());
+                    d.setProductName(product.getName());
                     d.setPrice(item.getPrice());
                     d.setQuantity(item.getQuantity());
+                    d.setColor(item.getColor());
+                    d.setSize(item.getSize());
+                    d.setReviewWritten(item.isReviewWritten());
+
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        d.setProductImage(product.getImages().get(0)); // 첫 이미지 사용
+                    } else {
+                        d.setProductImage("/uploads/cloth-images/default.jpg"); // 기본 이미지
+                    }
+
                     return d;
                 })
                 .toList();
+
         dto.setItems(itemDtos);
 
         return dto;
