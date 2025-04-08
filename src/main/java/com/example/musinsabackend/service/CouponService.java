@@ -1,13 +1,16 @@
 package com.example.musinsabackend.service;
 
 import com.example.musinsabackend.dto.CouponDto;
+import com.example.musinsabackend.dto.UserCouponDto;
 import com.example.musinsabackend.model.coupon.Coupon;
 import com.example.musinsabackend.model.coupon.CouponDistributionType;
 import com.example.musinsabackend.model.coupon.UserCoupon;
 import com.example.musinsabackend.model.user.User;
+import com.example.musinsabackend.repository.OrderRepository;
 import com.example.musinsabackend.repository.admin.AdminCouponRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import com.example.musinsabackend.repository.user.CouponRepository;
+import com.example.musinsabackend.repository.user.UserCouponRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,23 +25,20 @@ public class CouponService {
 
     @Autowired
     private AdminCouponRepository adminCouponRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private CouponRepository couponRepository;
+    @Autowired
+    private UserCouponRepository userCouponRepository;
 
     // ✅ 사용자 보유 쿠폰 목록 조회 (만료된 쿠폰 필터링 후 반환)
-    public List<CouponDto> getUserCoupons(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
-
-        List<UserCoupon> userCoupons = couponRepository.findUserCouponsByUser(user);
+    public List<UserCouponDto> getUserCoupons(Long userId) {
+        List<UserCoupon> userCoupons = userCouponRepository.findByUser_UserId(userId);
 
         return userCoupons.stream()
-                .filter(userCoupon -> userCoupon.getExpiryDate().isAfter(LocalDate.now()))  // 만료된 쿠폰 필터링
-                .map(this::convertToDto)
+                .filter(userCoupon -> userCoupon.getExpiryDate().isAfter(LocalDate.now()))
+                .map(UserCouponDto::new)  // ✅ UserCouponDto 생성자 사용
                 .collect(Collectors.toList());
     }
 

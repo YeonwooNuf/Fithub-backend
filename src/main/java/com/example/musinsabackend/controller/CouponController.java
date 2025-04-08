@@ -1,6 +1,7 @@
 package com.example.musinsabackend.controller;
 
 import com.example.musinsabackend.dto.CouponDto;
+import com.example.musinsabackend.dto.UserCouponDto;
 import com.example.musinsabackend.service.CouponService;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,9 @@ public class CouponController {
             token = token.replace("Bearer ", "");
             Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
-            List<CouponDto> userCoupons = couponService.getUserCoupons(userId);
+            // ✅ UserCouponDto 참조 (정상 작동)
+            List<UserCouponDto> userCoupons = couponService.getUserCoupons(userId);
+
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "사용자의 쿠폰 목록을 가져왔습니다.",
