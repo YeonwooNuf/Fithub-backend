@@ -15,6 +15,7 @@ import com.example.musinsabackend.repository.user.ProductRepository;
 import com.example.musinsabackend.repository.UserRepository;
 import com.example.musinsabackend.repository.user.CouponRepository;
 import com.example.musinsabackend.repository.PointRepository;
+import com.example.musinsabackend.repository.user.UserCouponRepository;
 import com.example.musinsabackend.service.PointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,8 @@ public class CartService {
     private final CouponRepository couponRepository;
     private final PointRepository pointRepository;
     private final PointService pointService;
+    private final UserCouponRepository userCouponRepository;
+
 
     /** 장바구니에 상품 추가 */
     @Transactional
@@ -99,13 +102,11 @@ public class CartService {
 
     /** 사용 가능한 쿠폰 목록 조회 (UserCoupon 활용) */
     private List<CouponDto> getUserCoupons(Long userId) {
-        List<UserCoupon> userCoupons = couponRepository.findUserCouponsByUser(userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")));
+        List<UserCoupon> userCoupons = userCouponRepository.findByUser_UserId(userId);
 
         return userCoupons.stream()
-                .map(userCoupon -> CouponDto.fromEntity(userCoupon.getCoupon()))
-                .filter(userCoupon ->
-                        userCoupon.getExpiryDate().isAfter(LocalDate.now()))
+                .filter(userCoupon -> userCoupon.getExpiryDate().isAfter(LocalDate.now()))
+                .map(CouponDto::fromUserCoupon)  // ← 핵심!
                 .collect(Collectors.toList());
     }
 
