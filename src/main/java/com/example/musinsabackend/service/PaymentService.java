@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -48,8 +49,9 @@ public class PaymentService {
             throw new IllegalArgumentException("paymentId가 필요합니다.");
         }
 
-        String usedCouponsJson = new ObjectMapper().writeValueAsString(request.get("usedCoupons"));
-        logger.info("🔍 결제 검증 요청: paymentId={}, usedPoints={}, usedCoupons={}", paymentId, usedPoints, usedCouponsJson);
+        List<Integer> usedCouponIds = (List<Integer>) request.get("usedCouponIds");
+        String usedCouponsJson = new ObjectMapper().writeValueAsString(usedCouponIds);
+        logger.info("🔍 결제 검증 요청: paymentId={}, usedPoints={}, usedCouponIds={}", paymentId, usedPoints, usedCouponIds);
 
         // PortOne 결제 상태 검증
         String token = getPortOneAccessToken();
@@ -79,7 +81,7 @@ public class PaymentService {
         response.put("usedPoints", usedPoints);
         response.put("finalAmount", finalAmount);
         response.put("earnedPoints", earnedPoints);
-        response.put("usedCoupons", request.get("usedCoupons"));
+        response.put("usedCoupons", usedCouponIds);
         response.put("totalAmount", totalAmount);
 
         return response;
