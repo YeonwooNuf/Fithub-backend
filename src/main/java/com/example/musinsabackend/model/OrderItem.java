@@ -33,4 +33,7 @@ public class OrderItem {
 
     private String color;
     private String size;
+
+    @Column(nullable = false)
+    private boolean reviewWritten = false;
 }
