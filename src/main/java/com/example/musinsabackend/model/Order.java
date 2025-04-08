@@ -50,7 +50,7 @@ public class Order {
 
     // 🔗 사용된 쿠폰들 (필요한 경우)
     @Builder.Default
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "order_used_user_coupons",
             joinColumns = @JoinColumn(name = "order_id"),
@@ -65,6 +65,8 @@ public class Order {
     }
 
     public void addUsedCoupon(UserCoupon coupon) {
-        this.usedCoupons.add(coupon);
+        if (!this.usedCoupons.contains(coupon)) {
+            this.usedCoupons.add(coupon);
+        }
     }
 }
