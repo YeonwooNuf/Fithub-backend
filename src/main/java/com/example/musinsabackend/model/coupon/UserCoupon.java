@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -31,7 +32,7 @@ public class UserCoupon {
     private LocalDate issuedDate; // 발급일
 
     @Column(nullable = false)
-    private LocalDate expiryDate; // 만료일 (expiresDate → expiryDate로 변경)
+    private LocalDate expiryDate; // 만료일
 
     // ✅ 발급 시 issuedDate 자동 설정
     @PrePersist
@@ -39,5 +40,19 @@ public class UserCoupon {
         if (issuedDate == null) {
             issuedDate = LocalDate.now();
         }
+    }
+
+    // ✅ JPA에서 중복 인식 문제 해결을 위한 equals & hashCode 구현
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserCoupon)) return false;
+        UserCoupon that = (UserCoupon) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }
