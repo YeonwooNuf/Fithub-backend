@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,6 +18,8 @@ public class UserCouponDto {
     private Long couponId;         // 쿠폰 템플릿 ID
     private String name;
     private int discount;
+    private int maxDiscountAmount;
+    private LocalDate expiryDate;
     private String target;
     private String targetValue;
 
@@ -25,6 +29,8 @@ public class UserCouponDto {
         this.couponId = coupon.getId();
         this.name = coupon.getName();
         this.discount = coupon.getDiscount();
+        this.maxDiscountAmount = coupon.getMaxDiscountAmount();
+        this.expiryDate = coupon.getExpiryDate();
         this.target = coupon.getTarget().name();
         this.targetValue = coupon.getTargetValue();
     }
