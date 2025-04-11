@@ -114,5 +114,4 @@ public class ProductController {
         List<ProductDto> latestProducts = productService.getLatestProducts(5);
         return ResponseEntity.ok(latestProducts);
     }
-
 }
