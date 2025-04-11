@@ -120,7 +120,8 @@ public class ProductService {
                 brandLogoUrl,
                 product.getCategory(),
                 product.getLikeCount(),
-                liked
+                liked,
+                product.getCreatedAt()
         );
     }
 }

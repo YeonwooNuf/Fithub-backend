@@ -141,7 +141,8 @@ public class AdminProductService {
                 product.getBrand() != null ? product.getBrand().getSubName() : "",
                 product.getCategory(),
                 product.getLikeCount(),
-                false // ✅ 관리자는 좋아요 여부 필요 없음
+                false, // ✅ 관리자는 좋아요 여부 필요 없음
+                product.getCreatedAt()
         );
     }
 

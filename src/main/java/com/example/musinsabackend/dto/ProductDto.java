@@ -1,6 +1,8 @@
 package com.example.musinsabackend.dto;
 
 import com.example.musinsabackend.model.ProductCategory;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ProductDto {
@@ -17,11 +19,12 @@ public class ProductDto {
     private ProductCategory category;
     private int likeCount;
     private boolean likedByCurrentUser;
+    private LocalDateTime createdAt;
 
     public ProductDto(Long id, String name, Double price, String description,
                       List<String> images, List<String> sizes, List<String> colors,
                       String brandName, String brandSubName, String brandLogoUrl, ProductCategory category,
-                      int likeCount, boolean likedByCurrentUser) {
+                      int likeCount, boolean likedByCurrentUser, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -35,6 +38,7 @@ public class ProductDto {
         this.category = category;
         this.likeCount = likeCount;
         this.likedByCurrentUser = likedByCurrentUser;
+        this.createdAt = LocalDateTime.now();
     }
 
     // ✅ Getter & Setter
@@ -82,4 +86,7 @@ public class ProductDto {
 
     public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
     public void setLikedByCurrentUser(boolean likedByCurrentUser) { this.likedByCurrentUser = likedByCurrentUser; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

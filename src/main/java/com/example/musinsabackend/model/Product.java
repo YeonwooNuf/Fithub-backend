@@ -3,7 +3,9 @@ package com.example.musinsabackend.model;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -58,6 +60,10 @@ public class Product {
     // ✅ 현재 로그인한 사용자의 좋아요 여부 (엔티티에는 저장되지 않고 DTO로 처리)
     @Transient
     private boolean likedByCurrentUser;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;    // 발매 일자
 
     // ✅ 기본 생성자
     public Product() {}
@@ -157,4 +163,7 @@ public class Product {
 
     public List<Like> getLikes() { return likes; }
     public void setLikes(List<Like> likes) { this.likes = likes; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
