@@ -19,5 +19,6 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     List<CommunityPost> findByContentContaining(String keyword);
 
     // 상품에 연결된 게시글 조회
-    List<CommunityPost> findByLinkedProductId(Long productId);
+    List<CommunityPost> findByLinkedProducts_Id(Long productId);
+
 }

@@ -26,7 +26,11 @@ public class CommunityPostController {
             HttpServletRequest request
     ) {
         Long userId = (Long) request.getAttribute("userId");
-        CommunityPostDto savedPost = communityPostService.createPost(userId, content, productId, images);
+
+        // ✅ 단일 productId → List<Long>로 변환
+        List<Long> productIds = (productId != null) ? List.of(productId) : List.of();
+
+        CommunityPostDto savedPost = communityPostService.createPost(userId, content, productIds, images);
         return ResponseEntity.ok(savedPost);
     }
 
@@ -52,7 +56,11 @@ public class CommunityPostController {
             HttpServletRequest request
     ) {
         Long userId = (Long) request.getAttribute("userId");
-        CommunityPostDto updated = communityPostService.updatePost(postId, userId, content, productId, images);
+
+        // ✅ 단일 productId → List<Long>로 변환
+        List<Long> productIds = (productId != null) ? List.of(productId) : List.of();
+
+        CommunityPostDto updated = communityPostService.updatePost(postId, userId, content, productIds, images);
         return ResponseEntity.ok(updated);
     }
 

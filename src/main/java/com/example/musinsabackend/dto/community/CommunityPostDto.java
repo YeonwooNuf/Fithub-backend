@@ -1,5 +1,6 @@
 package com.example.musinsabackend.dto.community;
 
+import com.example.musinsabackend.dto.ProductDto;
 import com.example.musinsabackend.model.community.CommunityPost;
 import com.example.musinsabackend.model.user.User;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -24,25 +26,23 @@ public class CommunityPostDto {
 
     private Long userId;
     private String nickname;
-
-    private Long productId;
-    private String productName;
-
-    private List<String> imageUrls;
-
     private String profileImageUrl;
 
-    public static CommunityPostDto from(CommunityPost post, List<String> imageUrls) {
+    private List<String> imageUrls; // 게시글 이미지
+
+    private List<ProductDto> products; // 연결된 여러 상품
+
+    public static CommunityPostDto from(CommunityPost post, List<String> imageUrls, List<ProductDto> productDtos) {
+        User user = post.getUser();
         return CommunityPostDto.builder()
                 .id(post.getId())
                 .content(post.getContent())
                 .createdAt(post.getCreatedAt())
-                .userId(post.getUser().getUserId())
-                .nickname(post.getUser().getNickname()) // 👈 사용자 닉네임
-                .profileImageUrl("/uploads/profile-images/" + post.getUser().getProfileImageUrl())
-                .productId(post.getLinkedProduct() != null ? post.getLinkedProduct().getId() : null)
-                .productName(post.getLinkedProduct() != null ? post.getLinkedProduct().getName() : null)
+                .userId(user.getUserId())
+                .nickname(user.getNickname())
+                .profileImageUrl("/uploads/profile-images/" + user.getProfileImageUrl())
                 .imageUrls(imageUrls)
+                .products(productDtos)
                 .build();
     }
 }

@@ -30,9 +30,13 @@ public class CommunityPost {
     @JoinColumn(name = "user_id")
     private User user; // 게시자
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product linkedProduct; // 🔗 선택 상품 (nullable)
+    @ManyToMany
+    @JoinTable(
+            name = "community_post_products",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private List<Product> linkedProducts = new ArrayList<>();
 
     @OneToMany(mappedBy = "communityPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> images = new ArrayList<>();
