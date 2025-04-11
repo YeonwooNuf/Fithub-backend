@@ -1,5 +1,6 @@
 package com.example.musinsabackend.dto;
 
+import com.example.musinsabackend.dto.community.CommunityPostDto;
 import com.example.musinsabackend.model.user.Role;
 import com.example.musinsabackend.model.user.User;
 import java.util.List;
