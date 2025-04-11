@@ -8,7 +8,9 @@ import com.example.musinsabackend.repository.user.LikeRepository;
 import com.example.musinsabackend.repository.user.ProductRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -83,6 +85,16 @@ public class ProductService {
         return productRepository.findTop10ByOrderByLikeCountDesc()
                 .stream()
                 .map(product -> mapToProductDtoWithLikeStatus(product, userId))
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductDto> getLatestProducts(int limit) {
+        Long userId = getCurrentUserId(); // ✅ 로그인 사용자 ID 가져오기
+
+        return productRepository
+                .findAll(PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .stream()
+                .map(product -> mapToProductDtoWithLikeStatus(product, userId)) // ✅ 올바른 메서드 사용
                 .collect(Collectors.toList());
     }
 

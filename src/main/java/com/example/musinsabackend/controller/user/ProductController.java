@@ -108,4 +108,11 @@ public class ProductController {
                 "totalPages", productPage.getTotalPages()
         ));
     }
+
+    @GetMapping("/latest")
+    public ResponseEntity<List<ProductDto>> getLatestProducts() {
+        List<ProductDto> latestProducts = productService.getLatestProducts(5);
+        return ResponseEntity.ok(latestProducts);
+    }
+
 }

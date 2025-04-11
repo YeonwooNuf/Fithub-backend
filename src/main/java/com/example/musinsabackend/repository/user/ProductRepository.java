@@ -31,5 +31,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ✅ 좋아요 수 기준으로 상위 10개 상품 조회
     List<Product> findTop10ByOrderByLikeCountDesc();
 
-    List<Product> findTop5ByOrderByCreatedAtDesc();
+    @Query("SELECT p FROM Product p ORDER BY p.createdAt DESC LIMIT :limit")
+    List<Product> findTopNByOrderByCreatedAtDesc(@Param("limit") int limit);
 }
