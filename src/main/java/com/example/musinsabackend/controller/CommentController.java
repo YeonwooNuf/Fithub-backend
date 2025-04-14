@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/community/comments")
@@ -19,11 +20,12 @@ public class CommentController {
     @PostMapping("/{postId}")
     public ResponseEntity<CommentDto> addComment(
             @PathVariable Long postId,
-            @RequestParam("content") String content,
+            @RequestBody Map<String, String> requestBody,
             @RequestParam(value = "parentId", required = false) Long parentId,
             HttpServletRequest request
     ) {
         Long userId = (Long) request.getAttribute("userId");
+        String content = requestBody.get("content");
         return ResponseEntity.ok(commentService.addComment(userId, postId, content, parentId));
     }
 
