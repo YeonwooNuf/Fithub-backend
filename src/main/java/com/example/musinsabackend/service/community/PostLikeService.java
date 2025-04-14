@@ -28,14 +28,16 @@ public class PostLikeService {
 
         if (existing.isPresent()) {
             likeRepository.delete(existing.get());
-            return new PostLikeDto(postId, userId, false);
         } else {
             PostLike like = new PostLike();
             like.setCommunityPost(post);
             like.setUser(user);
             likeRepository.save(like);
-            return new PostLikeDto(postId, userId, true);
         }
+
+        int updatedCount = likeRepository.countByCommunityPost_Id(postId);
+        boolean isLiked = likeRepository.existsByCommunityPost_IdAndUser_UserId(postId, userId);
+        return new PostLikeDto(postId, userId, isLiked, updatedCount);
     }
 
     public int countLikes(Long postId) {

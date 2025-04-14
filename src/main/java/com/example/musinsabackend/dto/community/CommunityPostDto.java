@@ -32,6 +32,8 @@ public class CommunityPostDto {
 
     private List<ProductDto> products; // 연결된 여러 상품
 
+    private int likeCount;
+
     public static CommunityPostDto from(CommunityPost post, List<String> imageUrls, List<ProductDto> productDtos) {
         User user = post.getUser();
         return CommunityPostDto.builder()
@@ -43,6 +45,7 @@ public class CommunityPostDto {
                 .profileImageUrl("/uploads/profile-images/" + user.getProfileImageUrl())
                 .imageUrls(imageUrls)
                 .products(productDtos)
+                .likeCount(post.getLikes().size()) // ✅ 추가
                 .build();
     }
 }

@@ -11,4 +11,5 @@ public class PostLikeDto {
     private Long postId;
     private Long userId;
     private boolean liked; // true: 좋아요 상태, false: 취소됨
+    private int likeCount;
 }
