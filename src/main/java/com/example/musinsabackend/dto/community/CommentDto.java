@@ -17,6 +17,7 @@ public class CommentDto {
 
     private Long userId;
     private String nickname;
+    private String profileImageUrl;
 
     private Long parentId; // 대댓글일 경우만 값 존재
 
@@ -28,6 +29,7 @@ public class CommentDto {
                 .createdAt(comment.getCreatedAt())
                 .userId(comment.getUser().getUserId())
                 .nickname(comment.getUser().getNickname()) // 필요시 getNickname() 등으로 수정
+                .profileImageUrl("/uploads/profile-images/" + comment.getUser().getProfileImageUrl())
                 .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
                 .build();
     }
