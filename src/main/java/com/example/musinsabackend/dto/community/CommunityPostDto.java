@@ -36,16 +36,26 @@ public class CommunityPostDto {
 
     public static CommunityPostDto from(CommunityPost post, List<String> imageUrls, List<ProductDto> productDtos) {
         User user = post.getUser();
+        String profileImage = user.getProfileImageUrl();
+        String profileImageUrl;
+
+        if (profileImage != null && profileImage.trim().startsWith("http")) {
+            profileImageUrl = profileImage.trim(); // 외부 URL
+        } else {
+            profileImageUrl = "/uploads/profile-images/" +
+                    (profileImage != null ? profileImage.trim() : "default-profile.jpg");
+        }
+
         return CommunityPostDto.builder()
                 .id(post.getId())
                 .content(post.getContent())
                 .createdAt(post.getCreatedAt())
                 .userId(user.getUserId())
                 .nickname(user.getNickname())
-                .profileImageUrl("/uploads/profile-images/" + user.getProfileImageUrl())
+                .profileImageUrl(profileImageUrl)  // ✅ 수정된 부분
                 .imageUrls(imageUrls)
                 .products(productDtos)
-                .likeCount(post.getLikes().size()) // ✅ 추가
+                .likeCount(post.getLikes().size())
                 .build();
     }
 }
