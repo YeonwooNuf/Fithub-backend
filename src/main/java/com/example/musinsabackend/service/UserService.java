@@ -4,6 +4,7 @@ import com.example.musinsabackend.dto.CouponDto;
 import com.example.musinsabackend.dto.PointDto;
 import com.example.musinsabackend.dto.UserDto;
 import com.example.musinsabackend.jwt.JwtTokenProvider;
+import com.example.musinsabackend.model.user.AuthProvider;
 import com.example.musinsabackend.model.user.Role;
 import com.example.musinsabackend.model.user.User;
 import com.example.musinsabackend.repository.PointRepository;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -54,7 +56,7 @@ public class UserService {
                         ? userDto.getProfileImageUrl()
                         : "default-profile.jpg"
         );
-
+        user.setProvider(AuthProvider.LOCAL);
         user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.USER);
 
         userRepository.save(user);
@@ -103,7 +105,8 @@ public class UserService {
                         user.getUserId(),
                         point.getAmount(),
                         point.getStatus(),
-                        point.getReason().name(),   // ENUM -> String 변환
+                        point.getReason() != null ? point.getReason().name() : "기타",
+                        // ENUM -> String 변환
                         point.getCreatedAt(),
                         point.getExpiredAt(),
                         point.getOrder() != null ? point.getOrder().getId() : null
@@ -114,10 +117,55 @@ public class UserService {
 
 
     // 사용자 ID로 사용자 정보 조회
-    public User findUserById(Long userId) {
-        return userRepository.findById(userId)
+    public UserDto findUserById(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        UserDto userDto = new UserDto(user); // 주소만 세팅됨
+
+        // ✅ 쿠폰 목록 null 체크 후 설정
+        if (user.getUserCoupons() != null) {
+            userDto.setCoupons(
+                    user.getUserCoupons().stream()
+                            .filter(uc -> uc.getCoupon() != null) // ✅ null 쿠폰 방어
+                            .map(uc -> new CouponDto(
+                                    uc.getCoupon().getId(),
+                                    uc.getCoupon().getName(),
+                                    uc.getCoupon().getDiscount(),
+                                    uc.getExpiryDate(),
+                                    uc.isUsed()
+                            ))
+                            .toList()
+            );
+        } else {
+            userDto.setCoupons(List.of()); // 빈 리스트로 초기화
+        }
+
+        // ✅ 포인트 목록 설정 (결과가 null일 일은 없지만 방어코드로 비워도 괜찮음)
+        try {
+            userDto.setPoints(
+                    pointRepository.findByUser_UserId(user.getUserId(), Pageable.unpaged())
+                            .stream()
+                            .map(point -> new PointDto(
+                                    point.getId(),
+                                    user.getUserId(),
+                                    point.getAmount(),
+                                    point.getStatus(),
+                                    point.getReason() != null ? point.getReason().name() : "기타",
+                                    point.getCreatedAt(),
+                                    point.getExpiredAt(),
+                                    point.getOrder() != null ? point.getOrder().getId() : null
+                            ))
+                            .toList()
+            );
+        } catch (Exception e) {
+            System.out.println("❌ 포인트 조회 중 오류 발생: " + e.getMessage());
+            userDto.setPoints(List.of()); // 빈 리스트 설정
+        }
+
+        return userDto;
     }
+
 
     // 쿠폰 개수 직접 가져오기
     public int getUserCouponCount(Long userId) {
@@ -151,5 +199,12 @@ public class UserService {
             throw new IllegalArgumentException("사용자가 존재하지 않습니다.");
         }
         userRepository.deleteById(userId);
+    }
+
+    // ✅ 변경
+    public UserDto findUserDtoById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return new UserDto(user);
     }
 }
