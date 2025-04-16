@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -106,16 +107,18 @@ public class UserController {
                 profileImageUrl = "/uploads/profile-images/default-profile.jpg";
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "userId", user.getUserId() != null ? user.getUserId() : -1,
-                    "username", user.getUsername() != null ? user.getUsername() : "unknown",
-                    "phone", user.getPhone() != null ? user.getPhone() : "",
-                    "nickname", user.getNickname() != null ? user.getNickname() : "",
-                    "unusedCoupons", couponCount,
-                    "totalPoints", user.getPoints() != null ? user.getPoints() : 0,
-                    "role", user.getRole() != null ? user.getRole() : "USER",
-                    "profileImageUrl", profileImageUrl != null ? profileImageUrl : "/uploads/profile-images/default-profile.jpg"
+            return ResponseEntity.ok(Map.ofEntries(
+                    Map.entry("success", true),
+                    Map.entry("userId", user.getUserId() != null ? user.getUserId() : -1),
+                    Map.entry("username", user.getUsername() != null ? user.getUsername() : "unknown"),
+                    Map.entry("phone", user.getPhone() != null ? user.getPhone() : ""),
+                    Map.entry("gender", user.getGender() != null ? user.getGender() : "unknown"),
+                    Map.entry("birthdate", user.getBirthdate() != null ? user.getBirthdate() : ""),
+                    Map.entry("nickname", user.getNickname() != null ? user.getNickname() : ""),
+                    Map.entry("unusedCoupons", couponCount),
+                    Map.entry("totalPoints", user.getPoints() != null ? user.getPoints() : 0),
+                    Map.entry("role", user.getRole() != null ? user.getRole() : "USER"),
+                    Map.entry("profileImageUrl", profileImageUrl != null ? profileImageUrl : "/uploads/profile-images/default-profile.jpg")
             ));
 
         } catch (Exception e) {
@@ -160,6 +163,39 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "success", false,
                     "message", "프로필 이미지를 불러오는 중 오류가 발생했습니다."
+            ));
+        }
+    }
+
+    @PutMapping(value = "/mypage", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateMyInfo(
+            @RequestParam(required = false) String nickname,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String birthdate,
+            @RequestParam(required = false) String newPassword,
+            @RequestPart(required = false) MultipartFile profileImage,
+            HttpServletRequest request
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 사용자입니다."
+            ));
+        }
+
+        try {
+            userService.updateUserInfo(userId, nickname, phone, gender, birthdate, newPassword, profileImage);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "회원정보가 성공적으로 수정되었습니다."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false,
+                    "message", "회원정보 수정 중 오류 발생: " + e.getMessage()
             ));
         }
     }
