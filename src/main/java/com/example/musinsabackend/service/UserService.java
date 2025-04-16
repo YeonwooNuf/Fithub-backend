@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,13 +29,15 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final CouponRepository couponRepository;
     private final PointRepository pointRepository;
+    private final FileUploadService fileUploadService;
 
-    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, CouponRepository couponRepository, PointRepository pointRepository) {
+    public UserService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, BCryptPasswordEncoder passwordEncoder, CouponRepository couponRepository, PointRepository pointRepository, FileUploadService fileUploadService) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.couponRepository = couponRepository;
         this.pointRepository = pointRepository;
+        this.fileUploadService = fileUploadService;
     }
 
     // 회원가입
@@ -166,7 +169,6 @@ public class UserService {
         return userDto;
     }
 
-
     // 쿠폰 개수 직접 가져오기
     public int getUserCouponCount(Long userId) {
         return couponRepository.countCouponsByUserId(userId);
@@ -207,4 +209,24 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         return new UserDto(user);
     }
+
+    @Transactional
+    public void updateUserInfo(Long userId, String nickname, String phone, String gender, String birthdate, String newPassword, MultipartFile profileImage) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (nickname != null) user.setNickname(nickname);
+        if (phone != null) user.setPhone(phone);
+        if (gender != null) user.setGender(gender);
+        if (birthdate != null) user.setBirthdate(birthdate);
+        if (newPassword != null && !newPassword.isEmpty()) user.setPassword(passwordEncoder.encode(newPassword));
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String filename = fileUploadService.saveProfileImage(profileImage);
+            user.setProfileImageUrl(filename);
+        }
+
+        userRepository.save(user);
+    }
+
 }
