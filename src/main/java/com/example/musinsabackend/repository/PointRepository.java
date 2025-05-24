@@ -17,7 +17,6 @@ import java.util.Optional;
 @Repository
 public interface PointRepository extends JpaRepository<Point, Long> {
 
-
     // ✅ 특정 사용자의 포인트 내역 조회 (페이징)
     Page<Point> findByUser_UserId(Long userId, Pageable pageable);
 
