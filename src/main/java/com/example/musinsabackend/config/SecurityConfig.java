@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/events/**", "/api/users/mypage", "/api/cart/**","/api/payment/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/users/addresses").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
