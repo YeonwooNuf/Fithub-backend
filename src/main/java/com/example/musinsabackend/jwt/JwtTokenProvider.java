@@ -4,6 +4,7 @@ import com.example.musinsabackend.model.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,22 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${SECRET_KEY:default-secret-key}")
-    private String SECRET_KEY;
+    // @Value("${SECRET_KEY:default-secret-key}")
+    // private String SECRET_KEY;
+    @Value("${jwt.secret:}")
+    private String jwtSecret;
 
     // ✅ 보안 강화: 키를 안전하게 생성
+    // private Key getSigningKey() {
+    //     return Keys.hmacShaKeyFor(SECRET_KEY.trim().getBytes(StandardCharsets.UTF_8));
+    // }
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.trim().getBytes(StandardCharsets.UTF_8));
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("jwt.secret is empty - set via SPRING_APPLICATION_JSON or env");
+        }
+        // ★ Base64 디코딩 후 사용
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret.trim());
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     // ✅ 토큰 생성 (userId 포함)
