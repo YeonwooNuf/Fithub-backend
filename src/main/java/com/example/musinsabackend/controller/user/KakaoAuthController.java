@@ -19,7 +19,7 @@ public class KakaoAuthController {
         String token = kakaoAuthService.loginWithKakao(code);
 
         // ✅ 프론트로 리다이렉트 (토큰을 URL에 포함)
-        String redirectUrl = "http://localhost:3000/oauth?token=" + token;
+        String redirectUrl = "http://3.37.230.219//oauth?token=" + token;
         return ResponseEntity.status(302)
                 .location(URI.create(redirectUrl))
                 .build();
